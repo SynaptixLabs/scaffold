@@ -215,15 +215,20 @@ if ($BackendType -eq "python") {
     # Disable .pyc bytecache — prevents stale code on Windows where file locks
     # block __pycache__ deletion. Slightly slower startup, guarantees fresh imports.
     $env:PYTHONDONTWRITEBYTECODE = "1"
+    # Split "uvicorn app.main:app" into module + arg so `python -m` receives `uvicorn` as the
+    # module and `app.main:app` as a separate token. Passing the whole string would run
+    # `python -m "uvicorn app.main:app"` — an invalid module name — because PowerShell does not
+    # word-split a string variable the way a POSIX shell does.
+    $beCmdParts = $BackendCmd -split '\s+'
     try {
         if ($Production) {
-            & $py -m $BackendCmd --host 0.0.0.0 --port $Port
+            & $py -m @beCmdParts --host 0.0.0.0 --port $Port
         } else {
             $reloadArgs = @("--reload")
             foreach ($rd in $ReloadDirs) {
                 if ($rd) { $reloadArgs += "--reload-dir"; $reloadArgs += $rd }
             }
-            & $py -m $BackendCmd --host 0.0.0.0 --port $Port @reloadArgs
+            & $py -m @beCmdParts --host 0.0.0.0 --port $Port @reloadArgs
         }
     } finally {
         Pop-Location

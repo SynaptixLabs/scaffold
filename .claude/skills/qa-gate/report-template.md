@@ -1,23 +1,24 @@
-# QA Gate Report: {{TOPIC}}
+# QA Gate — {{task-or-PR}}
 
-**Date:** {{DATE}} | **Sprint:** {{SPRINT}} | **QA:** {{QA_AGENT}}
+- **Gatekeeper:** {{persona}} (`cpto`)
+- **Date:** {{date}}
+- **Acceptance criteria:** {{one-line}}
 
-## Verdict: PASS / FAIL
+## Verdict: {{PASS | FAIL}}
 
-## Test Results
+{{one-line rationale}}
 
-| Layer | Tests | Passed | Failed | Coverage |
-|-------|-------|--------|--------|----------|
-| Unit | | | | |
-| Integration | | | | |
-| E2E | | | | |
+## Test evidence
 
-## Findings
+- Unit: {{N passed, 0 failed}}
+- Integration: {{N passed, 0 failed}}
+- E2E (real Chromium): {{N passed}} — viewports {{1024/1280/1920}} — screenshots: {{paths}}
+- Regression suite: {{result}}
 
-| # | Severity | Finding | Status |
-|---|----------|---------|--------|
-| F1 | | | Fixed/Open |
+## Coverage gaps found / filled
 
-## Evidence
+- {{gap}} → {{added test / still open}}
 
-[Test output, screenshots, or command results]
+## If FAIL — required to pass
+
+1. {{exact change}}

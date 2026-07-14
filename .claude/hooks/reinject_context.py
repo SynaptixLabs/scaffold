@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
-"""Re-inject session state after context compaction.
+"""Re-inject the scaffold's guardrails + git context after context compaction.
 
-This hook runs on SessionStart when compaction is detected.
-It reads .claude/state/session-state.md and prints it so Claude
-picks up where it left off.
+Runs on Claude Code SessionStart(matcher=compact). Prints a short reminder so the
+agent keeps binding the canonical brain (.claude/) and the P0 guardrails after a
+compaction event drops earlier context.
+
+Fail-soft by contract: any error is swallowed and the hook exits 0, so it can never
+block a session. It has no third-party dependencies.
 """
 
 import subprocess
@@ -11,55 +14,43 @@ import sys
 from pathlib import Path
 
 
-def main():
-    root = Path(__file__).resolve().parent.parent.parent
-    state_file = root / ".claude" / "state" / "session-state.md"
-
-    # Git context
+def _git(root: Path, *args: str) -> str:
     try:
-        branch = subprocess.check_output(
-            ["git", "rev-parse", "--abbrev-ref", "HEAD"],
-            cwd=root, text=True, stderr=subprocess.DEVNULL,
+        return subprocess.check_output(
+            ["git", *args], cwd=root, text=True, stderr=subprocess.DEVNULL
         ).strip()
     except Exception:
-        branch = "unknown"
+        return ""
 
-    try:
-        sha = subprocess.check_output(
-            ["git", "rev-parse", "--short", "HEAD"],
-            cwd=root, text=True, stderr=subprocess.DEVNULL,
-        ).strip()
-    except Exception:
-        sha = "unknown"
 
-    try:
-        status = subprocess.check_output(
-            ["git", "status", "--short"],
-            cwd=root, text=True, stderr=subprocess.DEVNULL,
-        ).strip()
-    except Exception:
-        status = ""
+def main() -> None:
+    root = Path(__file__).resolve().parents[2]
+    branch = _git(root, "rev-parse", "--abbrev-ref", "HEAD") or "unknown"
+    sha = _git(root, "rev-parse", "--short", "HEAD") or "unknown"
+    status = _git(root, "status", "--short")
 
-    print(f"## Session State Recovery (post-compaction)")
-    print(f"- **Branch:** {branch}")
-    print(f"- **Commit:** {sha}")
+    print("## Context recovery (post-compaction)")
+    print(f"- **Branch:** {branch}  ·  **Commit:** {sha}")
     if status:
         recent = "\n".join(status.splitlines()[:15])
-        print(f"- **Modified files:**\n```\n{recent}\n```")
+        print(f"- **Working tree:**\n```\n{recent}\n```")
 
-    # Session state file
-    if state_file.exists():
-        content = state_file.read_text(encoding="utf-8")
-        lines = content.splitlines()
-        capped = "\n".join(lines[:120])
-        print(f"\n---\n## Preserved Session State\n{capped}")
-    else:
-        print("\nNo session-state.md found. Start fresh or run /sync-state.")
-
-    print("\n---")
-    print("**Guidance:** Preserve the above context. Pick up where you left off.")
-    print("If session-state.md lists active files, blockers, or next actions — honor them.")
+    print(
+        "\n**Re-bind the canonical brain** (`.claude/`): route by capability via "
+        "`.claude/00_INDEX.md`; a persona (`.claude/agents/`) binds its class "
+        "(`.claude/roles/`) and class always wins."
+    )
+    print(
+        "**Guardrails (P0, `.claude/policies/`):** commandments · reuse-first before any "
+        "code · web E2E = real Chromium (`page.goto()`), never `request.get()` · honest status "
+        "(evidence, not assertion) · load the project's own context first · escalate "
+        "one-way-door decisions to the human owner."
+    )
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception:
+        # Never block a session on a hook error.
+        sys.exit(0)

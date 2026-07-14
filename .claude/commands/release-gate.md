@@ -1,59 +1,11 @@
-# /project:release-gate — Pre-Production Release Checklist
+---
+name: release-gate
+description: "Pre-production GO/NO-GO gate — all tests green, real-browser E2E on user-visible flows, honest status, one-way doors flagged."
+argument-hint: "[release or branch]"
+---
+Act as `cpto` (persona JANUS). Run the release gate for: $ARGUMENTS
 
-Run before any production deployment or public demo. Requires all items green.
-
-## Gate Checklist
-
-### Code Quality
-```
-[ ] All tests pass (unit + integration + E2E)
-[ ] No regressions vs previous release
-[ ] Type errors: NONE
-[ ] Lint: CLEAN
-[ ] Code coverage meets minimum threshold (80%+)
-[ ] Layout/CSS: no fixed-pixel max-width as sole responsive constraint
-[ ] E2E layout tests verified at 1024, 1280, 1920px viewports
-```
-
-### Security
-```
-[ ] No hardcoded secrets in codebase
-[ ] .env files not committed (check git log)
-[ ] Dependencies audited: npm audit / pip-audit (no critical CVEs)
-[ ] Auth flows tested (login, registration, session expiry, token refresh)
-[ ] Rate limiting in place on public endpoints
-[ ] Input validation on all external inputs
-```
-
-### Infrastructure
-```
-[ ] Environment variables set in prod (not just local .env)
-[ ] Database migrations applied to prod
-[ ] Health endpoint responding (/health or equivalent)
-[ ] Rollback plan defined (what to do if deploy fails)
-[ ] Vercel / Railway / Docker config reviewed
-```
-
-### Documentation
-```
-[ ] CHANGELOG.md updated with version + date
-[ ] README accurate and reflects current state
-[ ] CLAUDE.md reflects current architecture
-[ ] docs/03_MODULES.md current
-[ ] API docs updated (if applicable)
-```
-
-### Demo Readiness
-```
-[ ] Demo script written and tested end-to-end
-[ ] Test/seed data in place
-[ ] No debug logs or console.logs in production output
-[ ] Screenshots / recordings taken
-[ ] Feature flags set correctly
-```
-
-## Final Sign-off
-
-**Avi must explicitly approve before proceeding to production.**
-
-Output: Full checklist with ✅/❌ per item + list of blockers + **GO / NO-GO** recommendation.
+Confirm, with evidence: full test suite green; real-Chromium E2E passing on every user-visible
+flow; no unresolved P0/P1; honest status (no rounding up); any one-way-door decision flagged to the
+human owner. Verdict: **GO** or **NO-GO** with the blocking items. Binds
+`.claude/policies/commandments.md` + `.claude/policies/e2e-doctrine.md`.

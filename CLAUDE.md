@@ -1,161 +1,72 @@
-# {{PROJECT_NAME}} — Claude Code Project Context
+<!-- ⛔ E2E MEANS A REAL BROWSER — see .claude/policies/e2e-doctrine.md before writing any test ⛔ -->
 
-> **Stack:** {{TECH_STACK_SUMMARY}}
-> **Template version:** SynaptixLabs Windsurf-Projects-Template
+# {{PROJECT_NAME}} — Claude Code entry
+
+> **Thin loader.** Claude Code auto-reads this file. It carries only **project-local facts**
+> (below). All agent behavior — roles, personas, policies, skills — is canonical in **`.claude/`**
+> and summarized in **[`AGENTS.md`](AGENTS.md)**. Read those, don't restate them here.
 >
-> This file is auto-loaded by Claude Code CLI when you open this project directory.
-> Keep it current — it is the single source of truth for Claude's project awareness.
+> **Template version:** SynaptixLabs scaffold v1.0 · **Stack:** {{TECH_STACK_SUMMARY}}
+
+## Read order (every session)
+
+1. **[`AGENTS.md`](AGENTS.md)** — the constitution: architecture, class/persona model, guardrails.
+2. **[`.claude/00_INDEX.md`](.claude/00_INDEX.md)** — L1 router (task → who to activate).
+3. **[`.claude/policies/`](.claude/policies/00_index.md)** — the P0 doctrine.
+4. **This project's `project-management/`** — PRD, decisions, the active sprint (what's in scope now).
+
+## Agents (Claude-native)
+
+Subagents live in [`.claude/agents/`](.claude/agents/00_index.md); slash commands in
+[`.claude/commands/`](.claude/commands). The three examples:
+
+| Command | Persona · class | Use for |
+|---|---|---|
+| `/janus` · `/cpto` · `/janus-cpto` | **JANUS** · `cpto` | Direction, scope, requirements, GBU review, release gate |
+| `/aria` · `/ux-design` · `/uiux` · `/aria-uiux` | **ARIA** · `ux-design` | UI/UX direction, design kit, visual acceptance |
+| `/core` · `/dev` · `/core-dev` | **CORE** · `dev` | Implement features, reuse-first + test-first |
+| `/plan` `/gbu` `/e2e` `/qa-gate` `/release-gate` | — | Process commands |
 
 ---
 
-## 1. Project Identity
+## Project identity  <!-- CUSTOMIZE: fill these when you instantiate the template -->
 
 | Field | Value |
 |---|---|
 | **Name** | {{PROJECT_NAME}} |
 | **Purpose** | {{PROJECT_DESCRIPTION}} |
-| **Repo path** | `{{REPO_PATH}}` |
 | **Production URL** | {{PRODUCTION_URL}} |
-| **Current sprint** | {{CURRENT_SPRINT}} |
+| **Current sprint** | {{CURRENT_SPRINT}} → `project-management/sprints/{{CURRENT_SPRINT}}/index.md` |
 | **Dev port** | {{DEV_PORT}} (`{{DEV_COMMAND}}`) |
 
----
-
-## 2. Start the Server
+## Key commands  <!-- CUSTOMIZE -->
 
 ```bash
-# {{STACK_TYPE: Node/Next.js}}
-{{DEV_COMMAND}}    # Dev server → http://localhost:{{DEV_PORT}}
-
-# {{STACK_TYPE: Python/FastAPI}}
-# uvicorn app.main:app --reload    # API → http://localhost:8000
+{{DEV_COMMAND}}          # Start dev server → http://localhost:{{DEV_PORT}}
+{{BUILD_COMMAND}}        # Production build
+{{LINT_COMMAND}}         # Lint
+{{TEST_UNIT_COMMAND}}    # Unit tests
+{{TEST_E2E_COMMAND}}     # E2E — real Chromium (npx playwright install chromium first)
 ```
 
-> ⚠️ **E2E tests auto-start the server.** Do NOT start manually when running E2E.
+## Definition of done (project-local; extends the P0 gates)  <!-- CUSTOMIZE -->
 
----
+A feature is **done** only with evidence:
+- Unit + type checks pass; dev server runs.
+- User-visible web/UI change → **real-Chromium E2E** on the affected flow (`page.goto()`) + screenshots
+  in `tests/screenshots/`. Never `request.get()` as a stand-in. (`.claude/policies/e2e-doctrine.md`)
+- No regressions on the full suite.
+- Reuse-first respected (`.claude/policies/reuse-first.md`).
+- Human-owner sign-off.
 
-## 3. Key Commands
+## Architecture non-negotiables  <!-- CUSTOMIZE: add your stack's hard rules -->
 
-```bash
-# Development
-{{DEV_COMMAND}}                    # Start dev server
-{{BUILD_COMMAND}}                  # Production build
-{{TYPE_CHECK_COMMAND}}             # Type check
-{{LINT_COMMAND}}                   # Lint
+- {{ARCHITECTURE_NON_NEGOTIABLE_1}}
+- Before building anything new, check `project-management/03_MODULE_CONTRACTS.md` — don't duplicate
+  a capability.
+- No new infra dependency without a flagged decision to the human owner.
 
-# Testing
-{{TEST_UNIT_COMMAND}}              # Unit tests
-{{TEST_UNIT_SINGLE_COMMAND}}       # Unit tests (single run)
-{{TEST_E2E_COMMAND}}               # Full E2E (Playwright / pytest)
-{{TEST_FAST_COMMAND}}              # Quick smoke test
+## Environment  <!-- CUSTOMIZE -->
 
-# Database (if applicable)
-# npm run db:seed                  # Seed demo data
-# npm run db:migrate               # Run migrations
-# npx prisma studio                # DB GUI
-```
-
----
-
-## 4. Testing Rules (non-negotiable gates)
-
-```
-FEATURE IS "DONE" ONLY WHEN:
-  ✅ Unit tests pass
-  ✅ TypeScript / type check clean
-  ✅ Dev server runs and is functional
-  ✅ E2E smoke on affected flows (Playwright or pytest E2E)
-  ✅ Screenshots captured for GUI changes (tests/screenshots/)
-  ✅ No regressions on full suite
-  ✅ Avi sign-off
-```
-
-**NEVER mark done based on unit tests alone if a UI or API route was changed.**
-
----
-
-## 5. Project Structure
-
-```
-{{PROJECT_STRUCTURE}}
-```
-
-> ⚠️ Before building anything new: check `docs/03_MODULES.md` — capability registry.
-> Do not duplicate capabilities that already exist.
-
----
-
-## 6. Architecture Non-Negotiables
-
-{{ARCHITECTURE_NON_NEGOTIABLES}}
-
----
-
-## 7. Environment Variables
-
-Copy `{{ENV_EXAMPLE_FILE}}` → `{{ENV_LOCAL_FILE}}`. Required:
-
-```
-{{ENV_VARS_LIST}}
-```
-
----
-
-## 8. Sprint Context
-
-| Sprint | Status | Key deliverables |
-|---|---|---|
-| {{CURRENT_SPRINT}} | 🟢 Active | {{SPRINT_GOAL}} |
-
-Current sprint index: `docs/sprints/{{CURRENT_SPRINT}}/{{CURRENT_SPRINT}}_index.md`
-
----
-
-## 9. Common Flows to Test (E2E)
-
-{{E2E_FLOWS}}
-
----
-
-## 10. Deployment
-
-- **Platform:** {{DEPLOY_PLATFORM}}
-- **Build command:** `{{BUILD_COMMAND}}`
-- **Before any prod deploy:** run `/project:release-gate`
-
----
-
-## 11. Role Tags (align with AGENTS.md)
-
-| Tag | Who |
-|---|---|
-| `[FOUNDER]` | Avi — final decision maker |
-| `[CTO]` | Architecture, tech debt, reliability |
-| `[CPO]` | Product scope, acceptance criteria |
-| `[DEV:<module>]` | Module-level implementation |
-
-> Reading order: nearest `AGENTS.md` → root `AGENTS.md` → `docs/00_INDEX.md` → `docs/01_ARCHITECTURE.md`
-
----
-
-## 12. Custom Commands Available
-
-| Command | Purpose |
-|---|---|
-| `/project:test` | Run full test suite |
-| `/project:e2e` | Playwright browser tests |
-| `/project:plan` | Force plan mode before complex work |
-| `/project:regression` | Pre-merge gate |
-| `/project:release-gate` | Pre-prod checklist |
-| `/project:sprint-report` | Current sprint status |
-
----
-
-## 13. What NOT to Do
-
-{{WHAT_NOT_TO_DO}}
-- Do NOT silently expand scope
-- Do NOT add new infra dependencies without a FLAG
-- Do NOT mark features done without server + E2E verification (when applicable)
-- Do NOT push directly to `main` — always use sprint branches
+Copy `.env.example` → `.env` (or your local file). Required vars: {{ENV_VARS_LIST}}.
+Real values never go in git.

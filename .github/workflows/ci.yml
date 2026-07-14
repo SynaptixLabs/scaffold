@@ -1,5 +1,9 @@
-# {{PROJECT_NAME}} CI Workflow
-# Runs on PR and push to main/dev
+# CI — synaptix-scaffold
+#
+# The `agents` job works out of the box: it verifies the agent layer is consistent (no adapter
+# drift). The backend / frontend / shared jobs are CUSTOMIZATION POINTS — they are gated off until
+# you fill in your stack. Set the repo variable ENABLE_STACK_CI = "true" (Settings → Actions →
+# Variables) once your backend/frontend actually build, and replace the {{PLACEHOLDER}} commands.
 
 name: CI
 
@@ -9,113 +13,79 @@ on:
   pull_request:
     branches: [main, dev]
 
-env:
-  PYTHON_VERSION: "{{PYTHON_VERSION}}"
-  NODE_VERSION: "{{NODE_VERSION}}"
-
 jobs:
   # ========================
-  # Backend Tests
+  # Agent layer — always on. Verifies canonical brain + thin adapters are consistent.
   # ========================
-  backend:
-    name: Backend Tests
+  agents:
+    name: Agent adapter consistency
     runs-on: ubuntu-latest
-    
     steps:
       - uses: actions/checkout@v4
-      
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
-      
+          python-version: "3.12"
+      - name: Check adapters (personas → real classes, pointers resolve, no pasted bodies)
+        run: python3 scripts/check_adapters.py
+      - name: Self-test the guard (negative fixtures — proves it fails on drift)
+        run: python3 scripts/check_adapters_selftest.py
+
+  # ========================
+  # Backend tests — CUSTOMIZE: enable via repo variable ENABLE_STACK_CI once your stack is real.
+  # ========================
+  backend:
+    name: Backend tests
+    if: vars.ENABLE_STACK_CI == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"   # CUSTOMIZE
       - name: Install dependencies
         run: |
           cd backend
-          pip install poetry
-          poetry install --with dev
-      
+          pip install poetry && poetry install --with dev
       - name: Lint
-        run: |
-          cd backend
-          poetry run {{LINT_COMMAND}}
-      
+        run: cd backend && poetry run ruff check .   # CUSTOMIZE
       - name: Run tests
-        run: |
-          cd backend
-          poetry run pytest --cov=. --cov-report=xml
-      
+        run: cd backend && poetry run pytest --cov=. --cov-report=xml
       - name: Check coverage
-        run: |
-          cd backend
-          poetry run coverage report --fail-under=90
+        run: cd backend && poetry run coverage report --fail-under=90
 
   # ========================
-  # Frontend Tests
+  # Frontend tests (incl. real-Chromium Playwright E2E) — CUSTOMIZE.
   # ========================
   frontend:
-    name: Frontend Tests
+    name: Frontend tests
+    if: vars.ENABLE_STACK_CI == 'true'
     runs-on: ubuntu-latest
-    
     steps:
       - uses: actions/checkout@v4
-      
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version: "22"   # CUSTOMIZE
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
-      
       - name: Install dependencies
-        run: |
-          cd frontend
-          npm ci
-      
+        run: cd frontend && npm ci
       - name: Lint
-        run: |
-          cd frontend
-          npm run lint
-      
+        run: cd frontend && npm run lint
       - name: Run unit tests
-        run: |
-          cd frontend
-          npm run test:unit
-      
-      - name: Install Playwright
-        run: |
-          cd frontend
-          npx playwright install --with-deps
-      
-      - name: Run E2E tests
-        run: |
-          cd frontend
-          npm run test:e2e
-
-  # ========================
-  # Shared Tests
-  # ========================
-  shared:
-    name: Shared Tests
-    runs-on: ubuntu-latest
-    
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Set up Python
-        uses: actions/setup-python@v5
+        run: cd frontend && npm run test:unit
+      - name: Install Playwright Chromium
+        run: cd frontend && npx playwright install --with-deps chromium
+      - name: Run E2E tests (real Chromium — page.goto, not request.get)
+        run: cd frontend && npm run test:e2e
+      - name: Upload E2E evidence (screenshots + Playwright report)
+        if: always()   # keep the evidence even when the E2E step fails
+        uses: actions/upload-artifact@v4
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
-      
-      - name: Install dependencies
-        run: |
-          pip install poetry
-          poetry install --with dev
-      
-      - name: Run shared tests
-        run: |
-          poetry run pytest shared/ --cov=shared --cov-report=xml
-      
-      - name: Check coverage (95% for shared)
-        run: |
-          poetry run coverage report --fail-under=95
+          name: e2e-evidence
+          path: |
+            tests/screenshots/
+            frontend/playwright-report/
+          if-no-files-found: ignore

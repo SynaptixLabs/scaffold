@@ -1,56 +1,37 @@
-# Design Review: {{TOPIC}}
+# GBU Review — {{target}}
 
-**Date:** {{DATE}} | **Sprint:** {{SPRINT}} | **Reviewer:** {{REVIEWER}}
+- **Reviewer:** {{persona}} (`cpto`)
+- **Date:** {{date}}
+- **Target:** {{path-or-PR}}
+- **Acceptance criteria:** {{one-line}}
 
-## Executive Summary
+## Verdict
 
-**Verdict:** APPROVE / APPROVE WITH CONDITIONS / REVISE / REJECT
-**Score:** X/10
+**{{APPROVE | APPROVE WITH CONDITIONS | REVISE | REJECT}}**
 
-## Requirements Compliance
+{{one-paragraph rationale, referencing the evidence checked}}
 
-| # | Requirement | Met? | Evidence |
-|---|------------|------|----------|
-| R1 | | PASS/FAIL/PARTIAL | |
+## GOOD (preserve)
 
-## GBU Assessment
+- {{what works}} — evidence: {{test/screenshot/log}}
 
-### GOOD
-| # | What | Why It Works | Evidence |
-|---|------|-------------|----------|
-| G1 | | | |
+## BAD (fix — P0/P1/P2)
 
-### BAD
-| # | What | Impact | Fix | Effort |
-|---|------|--------|-----|--------|
-| B1 | | | | |
+- **[P?]** {{issue}} → fix: {{file + concrete change}}
 
-### UGLY
-| # | What | Impact | Fix | Sprint Target |
-|---|------|--------|-----|---------------|
-| U1 | | | | |
+## UGLY (rethink — P0/P1/P2)
 
-## Quality Scorecard
+- **[P?]** {{structural issue}} → recommendation: {{rethink}}
 
-| Dimension | Score (1-5) | Notes |
-|-----------|-------------|-------|
-| Requirements Coverage | | |
-| Module Reuse Compliance | | |
-| Test Coverage | | |
-| Regression Safety | | |
-| Documentation | | |
-| Architecture Reversibility | | |
-| Engineering Quality | | |
-| Production Readiness | | |
+## Evidence checked
 
-## Fixes Applied
+- {{tests run / screenshots / logs / metrics}}
+- E2E: {{real-Chromium `page.goto()` evidence, or "n/a — no user-visible change"}}
 
-| Commit | Fix |
-|--------|-----|
-| | |
+## Second-opinion gate
 
-## Carry-Forwards
+{{"triggers checked, none fired" — or which trigger fired and the outcome}}
 
-| Item | Sprint Target | Priority |
-|------|---------------|----------|
-| | | |
+## Required next actions
+
+1. {{owned by a class}}

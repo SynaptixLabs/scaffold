@@ -122,10 +122,14 @@ temp/
 *.sqlite3
 
 # ========================
-# Windsurf Specific
+# Agent CLI adapters — commit the shared config, ignore personal/local overrides
 # ========================
-# Keep .windsurf/ if using Windsurf project settings
-# .windsurf/
+# Canonical brain (.claude/) + adapters (AGENTS.md .agents/skills/ .cursor/ .gemini/) ARE committed.
+.claude/settings.local.json      # personal Claude Code overrides (example: settings.local.json.example)
+.gemini/oauth_creds.json         # Gemini CLI local credentials, if any
+# E2E screenshots are per-run evidence: keep the folder, upload from CI, don't commit stale PNGs.
+tests/screenshots/*.png
+!tests/screenshots/.gitkeep
 
 # ========================
 # Project Specific

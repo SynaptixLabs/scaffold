@@ -12,9 +12,9 @@
 
 ---
 
-## Owner Tag
+## Owner
 
-`[DEV:_example|BE]`
+Class `dev` (persona **CORE**) — see [`.claude/roles/dev.md`](../../../.claude/roles/dev.md).
 
 ---
 

@@ -1,28 +1,11 @@
-# Design Review Checklist
+# GBU review — checklist
 
-## Requirements Compliance
-- [ ] Every requirement from spec checked (PASS/FAIL/PARTIAL)
-- [ ] Evidence provided for each (file:line or test output)
-
-## Module Reuse
-- [ ] Existing modules used where applicable
-- [ ] No parallel infrastructure created
-- [ ] Module contracts respected
-
-## Code Quality
-- [ ] No hardcoded values (use config/settings)
-- [ ] No bare except clauses
-- [ ] Type hints on public functions
-- [ ] No TODO/FIXME left unresolved
-- [ ] No commented-out code blocks
-- [ ] No secrets in code
-
-## Testing
-- [ ] New code has tests
-- [ ] All tests pass
-- [ ] No regressions
-
-## Documentation
-- [ ] README updated if behavior changed
-- [ ] AGENTS.md updated if contracts changed
-- [ ] Module registry updated if capabilities changed
+- [ ] Target artifact read directly (not reviewed from its description).
+- [ ] Scope checked against acceptance criteria — nothing silently added or dropped.
+- [ ] Every run-dependent claim has evidence (tests / screenshots / logs / metrics).
+- [ ] User-visible work: real-Chromium E2E evidence present (`page.goto()`), not `request.get()`.
+- [ ] Reuse-first respected — no duplicate capability introduced.
+- [ ] Findings sorted GOOD / BAD / UGLY, each BAD/UGLY with severity (P0/P1/P2) + a concrete fix.
+- [ ] Second-opinion gate evaluated (fired → invoked, or "checked, none fired").
+- [ ] Verdict stated: APPROVE / APPROVE WITH CONDITIONS / REVISE / REJECT, with conditions/fixes.
+- [ ] Report saved under `project-management/sprints/sprint_<N>/reviews/`.
