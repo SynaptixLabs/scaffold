@@ -60,7 +60,7 @@ all pick it up. A CI check (`scripts/check_adapters.py`) fails the build if any 
 
 ```bash
 # 1. Get the template
-git clone https://github.com/SynaptixLabs/synaptix-scaffold.git my-project
+git clone https://github.com/SynaptixLabs/scaffold.git my-project
 cd my-project && rm -rf .git && git init
 
 # 2. Open it in your CLI of choice — the agents are already there:

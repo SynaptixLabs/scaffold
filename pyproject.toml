@@ -5,8 +5,8 @@ description = "Tool-agnostic template for running a team of AI coding agents —
 authors = ["Avidor Rabinovich <avidor@synaptixlabs.ai>"]
 license = "MIT"
 readme = "README.md"
-homepage = "https://github.com/SynaptixLabs/synaptix-scaffold"
-repository = "https://github.com/SynaptixLabs/synaptix-scaffold"
+homepage = "https://github.com/SynaptixLabs/scaffold"
+repository = "https://github.com/SynaptixLabs/scaffold"
 keywords = ["agents", "ai", "template", "claude-code", "codex", "cursor", "gemini-cli", "devin", "agents-md"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
