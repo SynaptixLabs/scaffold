@@ -98,11 +98,11 @@ minversion = "8.0"
 testpaths = ["tests"]
 python_files = ["test_*.py", "*_test.py"]
 python_functions = ["test_*"]
+# Coverage flags live in CI (backend job runs `pytest --cov` explicitly) so a bare
+# `pytest` works on a fresh clone without pytest-cov installed.
 addopts = [
     "--strict-markers",
     "--disable-warnings",
-    "--cov=scripts",
-    "--cov-report=term-missing",
 ]
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
