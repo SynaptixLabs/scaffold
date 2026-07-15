@@ -176,7 +176,8 @@ cd my-project && rm -rf .git && git init
 # Both commands end with a rich console summary: local URLs (frontend, API docs,
 # health), the key reads (AGENTS.md, sprint-1 entry, drift guard), and project links.
 # Works on Linux/macOS/WSL (start.sh) and Windows PowerShell 5.1+ (start.ps1 —
-# .\start.cmd wraps it with a per-run execution-policy bypass for UNC/MOTW clones).
+# .\start.cmd wraps it with a per-run execution-policy bypass for UNC/MOTW clones;
+# for a WSL-hosted repo it auto-delegates to ./start.sh inside WSL).
 
 # 4. Open it in your CLI — the agents are already there. Try:
 #    act as JANUS: scope a v1 for <your idea>

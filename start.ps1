@@ -40,6 +40,23 @@ param(
 $ErrorActionPreference = "Stop"
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 
+# ── WSL-hosted repo? Delegate to the Linux script ─────────────────────────────
+# A repo under \\wsl.localhost\<distro>\ (or \\wsl$\) must run with LINUX runtimes:
+# Windows `python -m venv` would overlay the Linux .venv into a broken hybrid, and
+# cmd.exe cannot cd to UNC paths (the frontend would never start). ./start.sh inside
+# WSL is the correct runtime — WSL2 forwards localhost ports to Windows automatically.
+if ($ScriptDir -match '^(?:Microsoft\.PowerShell\.Core\\FileSystem::)?\\\\wsl(?:\.localhost|\$)\\([^\\]+)(\\.*)$') {
+    $wslDistro = $Matches[1]
+    $wslPath   = $Matches[2] -replace '\\', '/'
+    $wslCmd = if ($Setup) { 'setup' } elseif ($Test) { 'test' } elseif ($Status) { 'status' }
+              elseif ($Stop) { 'stop' } elseif ($Help) { 'help' } elseif ($Production) { 'production' }
+              elseif ($BackendOnly) { 'dev' } else { $null }
+    Write-Host "[start.ps1] WSL-hosted repo ($wslDistro`:$wslPath) - delegating to ./start.sh $wslCmd" -ForegroundColor Cyan
+    if ($wslCmd) { & wsl.exe -d $wslDistro --cd $wslPath -- ./start.sh $wslCmd }
+    else         { & wsl.exe -d $wslDistro --cd $wslPath -- ./start.sh }
+    exit $LASTEXITCODE
+}
+
 # ============================================================================
 # CONFIGURATION — Edit this section per project
 # ============================================================================
