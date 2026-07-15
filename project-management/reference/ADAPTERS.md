@@ -13,20 +13,19 @@ Cursor and another in Codex, and no one notices until an agent does the wrong th
 ## The pattern — canonical brain + thin adapters
 
 ```
-                         ┌─────────────────────────────┐
-                         │      .claude/  (THE BRAIN)    │
-                         │  roles/     — class contracts │  ← edit behavior HERE
-                         │  policies/  — binding doctrine│
-                         │  skills/    — process skills  │
-                         │  00_INDEX   — capability router│
-                         └──────────────┬──────────────┘
-        thin pointers, no pasted bodies │
-   ┌───────────────┬───────────────┬────┴────┬───────────────┐
- AGENTS.md      CLAUDE.md /      .agents/     .cursor/       .gemini/
- (the open   .claude/agents+   skills/       rules/*.mdc   settings.json +
-  standard —   commands        */SKILL.md                   commands/*.toml
-  Codex,       (Claude)        (Codex $name,                + GEMINI.md
-  Windsurf,…)                   Devin)
+                 ┌─────────────────────────────────────┐
+                 │  .claude/   (THE BRAIN)             │
+                 │    roles/      — class contracts    │  ← edit behavior HERE
+                 │    policies/   — binding doctrine   │
+                 │    skills/     — process skills     │
+                 │    00_INDEX    — capability router  │
+                 └─────────────────┬───────────────────┘
+                                   │  thin pointers, no pasted bodies
+   ├── AGENTS.md             the open spine — Codex · Cursor · Devin · Windsurf · Amp · Aider · Zed …
+   ├── CLAUDE.md             Claude Code (agents/ + commands/ read natively)
+   ├── .agents/skills/       */SKILL.md — Codex `$name` · Devin `@skills:name` (its recommended path)
+   ├── .cursor/rules/        *.mdc — Cursor, optional glob-scoped extras on top of native AGENTS.md
+   └── .gemini/ + GEMINI.md  settings.json (AGENTS.md bridge) + commands/*.toml — Gemini CLI
 ```
 
 **One rule:** an adapter file is a **pointer + local delta only**. It must never paste the **body**

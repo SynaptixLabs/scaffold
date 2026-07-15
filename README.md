@@ -25,20 +25,19 @@ the build if any adapter drifts out of sync.
 ## The idea in one picture
 
 ```
-                    ┌──────────────────────────────────┐
-                    │   .claude/   ← THE CANONICAL BRAIN │
-                    │   roles/     class contracts       │   edit behavior HERE,
-                    │   policies/  binding doctrine       │   once — every CLI inherits it
-                    │   skills/    process procedures     │
-                    │   00_INDEX   capability router      │
-                    └───────────────┬──────────────────┘
-       thin pointers (never restate)│
-   ┌───────────┬───────────┬────────┼──────────┬──────────┐
- AGENTS.md   CLAUDE.md   .agents/   .cursor/   .gemini/
- (the open   + .claude   skills/    rules/     commands/
-  standard —  native)    (Codex $,  (Cursor)   (Gemini)
-  Codex/      Devin)
-  Windsurf/…)
+                 ┌────────────────────────────────────┐
+                 │  .claude/   ← THE CANONICAL BRAIN  │
+                 │    roles/      class contracts     │   edit behavior HERE,
+                 │    policies/   binding doctrine    │   once — every CLI inherits it
+                 │    skills/     process procedures  │
+                 │    00_INDEX    capability router   │
+                 └─────────────────┬──────────────────┘
+                                   │  thin pointers (never restate)
+   ├── AGENTS.md             the open spine — Codex · Cursor · Devin · Windsurf · Amp · Aider · Zed …
+   ├── CLAUDE.md             Claude Code (reads the brain natively)
+   ├── .agents/skills/       Codex `$name` · Devin `@skills:name` (Devin's recommended path)
+   ├── .cursor/rules/        Cursor — optional glob-scoped extras on top of native AGENTS.md
+   └── .gemini/ + GEMINI.md  Gemini CLI — slash commands + the AGENTS.md settings bridge
 ```
 
 Every surface except `.claude/` is a **thin adapter**: a pointer plus a small local delta, never a
@@ -58,10 +57,10 @@ scaffold/
 │   ├── 00_INDEX.md             L1 router — task → which agent to activate
 │   └── SKILLS_INDEX.md         skill trigger routing
 │
-├── AGENTS.md                   ★ the universal spine (agents.md standard) — Codex, Windsurf, Amp, Aider, Zed…
+├── AGENTS.md                   ★ the universal spine (agents.md standard) — Codex, Cursor, Devin, Windsurf, Amp, Zed…
 ├── .agents/skills/             neutral cross-tool skills → `$name` in Codex, `@skills:name` in Devin
-├── .cursor/rules/              Cursor rules (*.mdc): base rule, roles rule, E2E rule
-├── .gemini/                    Gemini CLI: settings.json + commands/*.toml
+├── .cursor/rules/              optional Cursor rules (*.mdc — Cursor reads AGENTS.md natively): base, roles, E2E
+├── .gemini/                    Gemini CLI: settings.json (the AGENTS.md bridge) + commands/*.toml
 ├── CLAUDE.md · GEMINI.md       thin loaders (Claude / Gemini auto-read these; point to AGENTS.md + .claude/)
 │
 ├── project-management/         ★ ALL durable docs live here (no scattered docs/ folder)
@@ -74,8 +73,10 @@ scaffold/
 │
 ├── scripts/check_adapters.py   the CI drift guard (+ check_adapters_selftest.py)
 ├── backend/ · frontend/ · shared/ · ml-ai-data/   project skeleton (each has a Tier-2 AGENTS.md)
+├── tests/                      test root — screenshots/ is the E2E evidence target (your tests land here)
 ├── .github/workflows/ci.yml    runs the drift guard on every push/PR
-└── start.sh · start.ps1 · .env.example · pyproject.toml   project bootstrap (customize per project)
+├── start.sh · start.ps1 · .env.example · pyproject.toml   project bootstrap (customize per project)
+└── LICENSE (MIT) · CONTRIBUTING.md · CHANGELOG.md
 ```
 
 ## The agents
