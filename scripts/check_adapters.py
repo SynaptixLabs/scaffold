@@ -13,9 +13,10 @@ Checks (stdlib only, no dependencies):
      which must exist.
   2. Every referenced class in `.claude/roles/` exists; every persona resolves to a real class.
   3. Every persona is named in the AGENTS.md routing tables (case-insensitive) so AGENTS.md-aware
-     tools can see it, and every persona/functional-alias `/command` shipped for Claude is also
-     shipped for Gemini (when Gemini support is present), so a role can't be added to one CLI and
-     forgotten in another.
+     tools can see it, and the Claude and Gemini command sets are in FULL parity — every
+     `/command` shipped for one (persona, class, alias, or process command) exists for the other
+     (when Gemini support is present) — so a command can't be added to one CLI and forgotten in
+     another.
   4. Pointer resolution: every `.claude/...`, `../roles/...`, `../policies/...`, `../skills/...`,
      `../agents/...` path referenced in the canonical brain and in the adapters resolves to a real
      file.
@@ -133,54 +134,33 @@ def check_routing_parity(root: Path, personas: dict[str, str]) -> None:
                 fail(f"{rel} does not mention persona '{persona}' — routing tables have drifted")
 
 
-def _command_alias_map(cmd_dir: Path, ext: str, personas: dict[str, str], classes: set[str]) -> dict[str, str]:
-    """A command file is a *functional alias* of a persona when its stem is neither a persona name
-    nor a class name, yet its body binds a persona's agent (`agents/<persona>.md`). Returns
-    {alias_stem: persona}. Persona-named and class-named commands are the primary entry points, not
-    aliases, so they're excluded here (persona parity is checked separately)."""
-    out: dict[str, str] = {}
-    if not cmd_dir.is_dir():
-        return out
-    for cmd in cmd_dir.glob(f"*.{ext}"):
-        stem = cmd.stem
-        if stem in personas or stem in classes:
-            continue
-        m = re.search(r"agents/([a-z0-9-]+)\.md", cmd.read_text(encoding="utf-8"))
-        if m and m.group(1) in personas:
-            out[stem] = m.group(1)
-    return out
-
-
 def check_command_projection(root: Path, personas: dict[str, str], classes: set[str]) -> None:
-    """Keep the command-based CLIs (Claude `/x`, Gemini `/x`) in sync with the canonical brain, so
-    a persona or functional alias added to one can't be silently forgotten in another — the exact
-    drift the scaffold exists to prevent. Only enforced for a CLI whose command dir is actually
-    shipped (a template may legitimately drop Gemini support)."""
+    """FULL command parity between the command-based CLIs (Claude `/x` ↔ Gemini `/x`): every
+    `.claude/commands/*.md` — persona, class, functional alias, or process command alike — must
+    have a `.gemini/commands/*.toml` twin, and vice versa. One command surface can't silently
+    drift ahead of another — the exact drift the scaffold exists to prevent. Only enforced when
+    the Gemini command dir is actually shipped (a template may legitimately drop Gemini support)."""
     gem_dir = root / ".gemini/commands"
     if not gem_dir.is_dir():
         return
     claude_cmds = {p.stem for p in (root / ".claude/commands").glob("*.md")}
     gemini_cmds = {p.stem for p in gem_dir.glob("*.toml")}
 
-    # (a) Persona parity: every persona reachable as a Claude command must be reachable in Gemini.
-    for persona in personas:
-        if persona in claude_cmds and persona not in gemini_cmds:
-            fail(
-                f".gemini/commands/{persona}.toml is missing — persona '{persona}' has a Claude "
-                f"command but no Gemini one; the routing surfaces have drifted. Add the thin "
-                f"command (or prune the persona from both)."
-            )
+    def kind(stem: str) -> str:
+        return "persona" if stem in personas else "class" if stem in classes else "command"
 
-    # (b) Functional-alias parity: an alias in the canonical brain must be projected to Gemini too.
-    claude_aliases = _command_alias_map(root / ".claude/commands", "md", personas, classes)
-    gemini_aliases = _command_alias_map(gem_dir, "toml", personas, classes)
-    for alias, persona in claude_aliases.items():
-        if alias not in gemini_aliases:
-            fail(
-                f".gemini/commands/{alias}.toml is missing — '{alias}' is a functional alias of "
-                f"persona '{persona}' in .claude/commands but is absent for Gemini; the alias set "
-                f"has drifted across CLIs. Add the thin command (or drop the alias from both)."
-            )
+    for stem in sorted(claude_cmds - gemini_cmds):
+        fail(
+            f".gemini/commands/{stem}.toml is missing — {kind(stem)} '/{stem}' is shipped for "
+            f"Claude but not for Gemini; the command surfaces have drifted. Add the thin command "
+            f"(or drop it from both)."
+        )
+    for stem in sorted(gemini_cmds - claude_cmds):
+        fail(
+            f".claude/commands/{stem}.md is missing — {kind(stem)} '/{stem}' is shipped for "
+            f"Gemini but not for Claude; the command surfaces have drifted. Add the thin command "
+            f"(or drop it from both)."
+        )
 
 
 def check_tool_grants(root: Path, personas: dict[str, str]) -> None:

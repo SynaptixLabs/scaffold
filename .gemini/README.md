@@ -13,12 +13,17 @@ constitution is always in scope.
 
 | Command | Loads |
 |---|---|
-| `/janus` | `../.claude/agents/janus.md` → `../.claude/roles/cpto.md` |
-| `/aria` (or `/uiux`) | `../.claude/agents/aria.md` → `../.claude/roles/ux-design.md` |
-| `/core` | `../.claude/agents/core.md` → `../.claude/roles/dev.md` |
-| `/gbu` | `../.claude/skills/design-review-gbu/SKILL.md` |
+| `/janus` · `/cpto` · `/janus-cpto` | `../.claude/agents/janus.md` → `../.claude/roles/cpto.md` |
+| `/aria` · `/ux-design` · `/uiux` · `/aria-uiux` | `../.claude/agents/aria.md` → `../.claude/roles/ux-design.md` |
+| `/core` · `/dev` · `/core-dev` | `../.claude/agents/core.md` → `../.claude/roles/dev.md` |
+| `/gbu` (alias `/review`) | `../.claude/skills/design-review-gbu/SKILL.md` |
 | `/e2e` | `../.claude/skills/browser-e2e/SKILL.md` |
+| `/qa-gate` | `../.claude/skills/qa-gate/SKILL.md` (PASS/FAIL merge gate) |
+| `/release-gate` | GO/NO-GO release gate (as `cpto`) |
 | `/plan` | plan-first guardrail (Commandment B4) |
+
+The command set is in **full parity** with `.claude/commands/` — `scripts/check_adapters.py` fails
+CI if the two surfaces ever diverge (either direction).
 
 **Class always wins** — a persona binds its class first and never softens a verdict, skips
 evidence, widens scope, or weakens a gate. Keep these commands thin: edit behavior in `../.claude/`,

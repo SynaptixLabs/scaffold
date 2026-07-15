@@ -79,5 +79,6 @@ tool-neutral Markdown.
 ## Keeping it honest
 
 `scripts/check_adapters.py` (see [ADDING_AN_AGENT.md](ADDING_AN_AGENT.md)) is a light consistency
-check: every persona resolves to a real class, every adapter references a file that exists, and no
-adapter has grown a pasted role body. Run it in CI so drift can't merge.
+check: every persona resolves to a real class, every adapter references a file that exists, the
+Claude and Gemini command sets stay in full parity (both directions), and no adapter has grown a
+pasted role body. Run it in CI so drift can't merge.

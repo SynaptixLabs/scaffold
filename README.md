@@ -123,9 +123,13 @@ adapters — see [`project-management/reference/ADDING_AN_AGENT.md`](project-man
 |---|---|---|
 | **Claude Code** | `/janus` (or `@janus`) | `/aria` · `/ux-design` · `/uiux` · `/aria-uiux` |
 | **Codex** | `act as JANUS` — or `$janus` | `act as ARIA` — or `$aria` / `$uiux` / `$aria-uiux` |
-| **Gemini CLI** | `/janus` | `/aria` · `/uiux` · `/aria-uiux` |
+| **Gemini CLI** | `/janus` (or `/cpto`) | `/aria` · `/ux-design` · `/uiux` · `/aria-uiux` |
 | **Devin** | `@skills:janus` (or auto) | `@skills:aria` / `…:uiux` / `…:aria-uiux` |
 | **Cursor / Windsurf / …** | `act as JANUS …` (the rules / `AGENTS.md` route it) | `act as ARIA …` |
+
+Claude Code and Gemini CLI ship the **identical command set** — every persona, class, alias, and
+process command (`/gbu`, `/review`, `/plan`, `/e2e`, `/qa-gate`, `/release-gate`) exists on both;
+the drift guard fails CI if they ever diverge.
 
 **2. Work the loop.** A typical flow:
 
@@ -143,7 +147,8 @@ reports back with files touched + evidence.
 
 ```bash
 python3 scripts/check_adapters.py         # every persona → real class, pointers resolve, no pasted bodies,
-                                          # routing tables agree, no persona over-grants its class
+                                          # routing tables agree, Claude ↔ Gemini command parity,
+                                          # no persona over-grants its class
 python3 scripts/check_adapters_selftest.py  # proves the guard actually catches drift
 ```
 
@@ -185,12 +190,15 @@ python3 scripts/check_adapters.py
 
 | CLI | Entry file | Invoke a role |
 |---|---|---|
-| Claude Code | `CLAUDE.md` + `.claude/` | `/janus`, `/aria` (or `/uiux` / `/aria-uiux`), `/core` |
-| Codex | `AGENTS.md` + `.agents/skills/` | `act as JANUS` — or `$janus` |
+| Claude Code | `CLAUDE.md` + `.claude/` | `/janus`, `/aria`, `/core` + class & alias commands (`/cpto`, `/uiux`, `/aria-uiux`, …) |
+| Codex | `AGENTS.md` + `.agents/skills/` | `act as JANUS` — or `$janus` / `$cpto` / `$janus-cpto` |
 | Cursor | `AGENTS.md` + `.cursor/rules/` | rules route `act as …` |
-| Gemini CLI | `GEMINI.md` + `.gemini/` | `/janus`, `/aria` (or `/uiux` / `/aria-uiux`), `/core` |
+| Gemini CLI | `GEMINI.md` + `.gemini/` | same command set as Claude Code (`/janus`, `/aria`, `/core`, …) — parity CI-enforced |
 | Devin | `AGENTS.md` + `.agents/skills/` | `janus` skill (auto / `@skills:janus`) |
 | Windsurf · Amp · Aider · Zed · Jules · Copilot · … | `AGENTS.md` | `act as …` (free — one spine, no dedicated adapter) |
+
+Process commands (`/gbu` · `/review` · `/plan` · `/e2e` · `/qa-gate` · `/release-gate`) exist on
+every command surface: Claude `/x`, Gemini `/x`, Codex `$x`, Devin `@skills:x`.
 
 ---
 

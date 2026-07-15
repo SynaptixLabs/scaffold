@@ -14,9 +14,11 @@
 ## Acting in a role
 
 A **class** is a role; a **persona** is a named instance (`act as <class>` / `act as <PERSONA>`).
-**Class always wins.** Custom commands are in [`.gemini/commands/`](.gemini/commands) — invoke
-`/janus`, `/aria`, `/core`, `/gbu`, `/plan`. Each loads the same canonical class contract under
-`.claude/roles/`.
+**Class always wins.** Custom commands are in [`.gemini/commands/`](.gemini/commands) — the set is
+**identical to Claude Code's** (drift-guard-enforced): personas `/janus` `/aria` `/core`, classes
+`/cpto` `/ux-design` `/dev`, aliases `/janus-cpto` `/uiux` `/aria-uiux` `/core-dev`, and process
+commands `/gbu` `/review` `/plan` `/e2e` `/qa-gate` `/release-gate`. Each loads the same canonical
+class contract or skill under `.claude/`.
 
 | Persona · class | Use for |
 |---|---|

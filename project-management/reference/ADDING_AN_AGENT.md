@@ -65,8 +65,9 @@ Each adapter is 5–10 lines: frontmatter + "read the canonical file and follow 
 the class body. Want an **alias** — a functional keyword (like `uiux`) or a compound
 `<persona>-<class>` (like `janus-cpto`, `core-dev`, `aria-uiux`)? Add one entry of the alias name
 pointing at the same class, on each command-based surface: `.agents/skills/<alias>/SKILL.md` +
-`.claude/commands/<alias>.md` + `.gemini/commands/<alias>.toml`. The checker enforces that a Claude
-alias also exists for Gemini (command-projection parity), so they can't drift.
+`.claude/commands/<alias>.md` + `.gemini/commands/<alias>.toml`. The checker enforces **full
+Claude ↔ Gemini command parity** — every `.claude/commands/*.md` must have a
+`.gemini/commands/*.toml` twin and vice versa — so the command surfaces can't drift.
 
 ## 5. Update `AGENTS.md`
 

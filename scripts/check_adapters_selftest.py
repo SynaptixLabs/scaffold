@@ -65,6 +65,17 @@ def _mut_missing_gemini_alias(root: Path) -> None:
     (root / ".gemini/commands/uiux.toml").unlink()
 
 
+def _mut_missing_gemini_process_cmd(root: Path) -> None:
+    (root / ".gemini/commands/qa-gate.toml").unlink()
+
+
+def _mut_gemini_only_command(root: Path) -> None:
+    (root / ".gemini/commands/ghost.toml").write_text(
+        'description = "drift fixture"\nprompt = "Read `.claude/00_INDEX.md`. {{args}}"\n',
+        encoding="utf-8",
+    )
+
+
 def _mut_dangling_pointer(root: Path) -> None:
     f = root / "AGENTS.md"
     f.write_text(f.read_text() + "\n\nBroken ref: `.claude/roles/does-not-exist.md`\n", encoding="utf-8")
@@ -79,6 +90,8 @@ MUTATIONS = {
     "agent name != filename stem": _mut_name_mismatch,
     "persona missing a Gemini command": _mut_missing_gemini_persona,
     "functional alias missing for Gemini": _mut_missing_gemini_alias,
+    "process command missing for Gemini": _mut_missing_gemini_process_cmd,
+    "Gemini-only command with no Claude twin": _mut_gemini_only_command,
     "dangling pointer in an adapter": _mut_dangling_pointer,
     "persona bound to a non-existent class": _mut_bad_class_ref,
 }
