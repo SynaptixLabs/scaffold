@@ -36,6 +36,10 @@ $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 # CONFIGURATION — Edit this section per project
 # ============================================================================
 $ProjectName     = "{{PROJECT_NAME}}"          # e.g. "My Project"
+$ProjectTagline  = "One brain, every CLI - synaptix-scaffold template"  # CUSTOMIZE
+$RepoUrl         = "https://github.com/SynaptixLabs/scaffold"           # CUSTOMIZE: your repo
+$OrgUrl          = "https://synaptixlabs.ai"                            # CUSTOMIZE: your org/site
+$LicenseName     = "MIT"
 $BackendType     = "python"                     # "python" | "node"
 $BackendDir      = "backend"                    # Relative to repo root ("." for monolith)
 $BackendCmd      = "uvicorn app.main:app"       # Python: uvicorn entrypoint. Node: ignored (uses npm)
@@ -69,6 +73,26 @@ function Find-Python {
     )
     foreach ($p in $candidates) { if (Test-Path $p) { return $p } }
     return "python"
+}
+
+# Rich info block — printed after -Setup and under the dev banner.
+function Write-InfoLinks([string]$Mode = "next") {
+    $suffix = if ($Mode -eq "next") { "  (after .\start.ps1)" } else { "" }
+    Write-Host "   Local URLs$suffix" -ForegroundColor White
+    Write-Host "     Marketing page   http://localhost:$UIPort" -ForegroundColor Cyan
+    Write-Host "     API              http://localhost:$Port" -ForegroundColor Cyan
+    Write-Host "     API docs         http://localhost:$Port/docs" -ForegroundColor Cyan
+    Write-Host "     Health           http://localhost:$Port$HealthPath" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "   Read me first" -ForegroundColor White
+    Write-Host "     Constitution     AGENTS.md   -   Router  .claude\00_INDEX.md"
+    Write-Host "     Sprint 1 entry   project-management\sprints\sprint_01\index.md"
+    Write-Host "     Drift guard      python scripts\check_adapters.py"
+    Write-Host ""
+    Write-Host "   Project" -ForegroundColor White
+    Write-Host "     GitHub           $RepoUrl" -ForegroundColor Cyan
+    Write-Host "     Web              $OrgUrl" -ForegroundColor Cyan
+    Write-Host "     License          $LicenseName (see LICENSE)"
 }
 
 # ── Environment setup/update (mirrors start.sh ensure_*) ──
@@ -188,9 +212,19 @@ if ($Setup) {
         }
     }
     Write-Host ""
-    Write-Host "[start.ps1] Environment ready." -ForegroundColor Green
-    Write-Host "[start.ps1] Sprint 1 entry:  project-management\sprints\sprint_01\index.md" -ForegroundColor Green
-    Write-Host "[start.ps1] Start dev:       .\start.ps1" -ForegroundColor Green
+    Write-Host "  ====================================================" -ForegroundColor DarkCyan
+    Write-Host "   $ProjectName  - $ProjectTagline" -ForegroundColor DarkCyan
+    Write-Host "  ----------------------------------------------------" -ForegroundColor DarkCyan
+    Write-Host "   Environment ready - you're set for sprint 1." -ForegroundColor Green
+    Write-Host ""
+    Write-Host "   Run it" -ForegroundColor White
+    Write-Host "     .\start.ps1            dev: backend + frontend"
+    Write-Host "     .\start.ps1 -Test      run the test suite"
+    Write-Host "     .\start.ps1 -Status    health check   -   .\start.ps1 -Stop"
+    Write-Host ""
+    Write-InfoLinks "next"
+    Write-Host "  ====================================================" -ForegroundColor DarkCyan
+    Write-Host ""
     return
 }
 
@@ -277,17 +311,18 @@ if ($startFrontend) {
 # STEP 5: Banner + Start backend
 # ═══════════════════════════════════════════════════════
 Write-Host ""
-Write-Host "  ============================================" -ForegroundColor DarkCyan
-Write-Host "   $ProjectName" -ForegroundColor DarkCyan
-Write-Host "  --------------------------------------------" -ForegroundColor DarkCyan
-Write-Host "   Build:    $buildStamp" -ForegroundColor DarkCyan
-Write-Host "   Backend:  http://localhost:$Port" -ForegroundColor DarkCyan
+Write-Host "  ====================================================" -ForegroundColor DarkCyan
+Write-Host "   $ProjectName  - $ProjectTagline" -ForegroundColor DarkCyan
+Write-Host "  ----------------------------------------------------" -ForegroundColor DarkCyan
+Write-Host "   Build $buildStamp   -   Ctrl+C to stop" -ForegroundColor DarkCyan
+Write-Host ""
 if ($startFrontend) {
-    Write-Host "   Frontend: http://localhost:$UIPort" -ForegroundColor DarkCyan
+    Write-InfoLinks "running"
+} else {
+    Write-Host "   API   http://localhost:$Port   docs /docs   health $HealthPath" -ForegroundColor Cyan
+    Write-Host "   (frontend not started - run without -BackendOnly for the full stack)" -ForegroundColor DarkGray
 }
-Write-Host "   API docs: http://localhost:$Port/docs" -ForegroundColor DarkCyan
-Write-Host "   Press Ctrl+C to stop" -ForegroundColor DarkCyan
-Write-Host "  ============================================" -ForegroundColor DarkCyan
+Write-Host "  ====================================================" -ForegroundColor DarkCyan
 Write-Host ""
 
 $beDir = if ($BackendDir -eq ".") { $ScriptDir } else { Join-Path $ScriptDir $BackendDir }

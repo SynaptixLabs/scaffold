@@ -7,7 +7,10 @@ CLI, Devin, Windsurf, and any other tool that reads the open [`AGENTS.md`](AGENT
 more maintaining a separate config per tool and watching them drift apart.
 
 > Distilled and open-sourced from SynaptixLabs' internal Nexus agent platform — the private IP
-> stays private; this is the pattern, free to use. **License:** MIT.
+> stays private; this is the pattern, free to use.
+>
+> **License: MIT — open for all.** Use it, fork it, ship it, commercially or not. Attribution
+> appreciated, never required. ([LICENSE](LICENSE))
 
 ---
 
@@ -167,7 +170,11 @@ cd my-project && rm -rf .git && git init
 ./start.sh setup            # Windows: .\start.ps1 -Setup
 
 # 3. Run it — the template starts out of the box
-./start.sh dev --ui         # backend :8000 (/health, /docs) + frontend :5173
+./start.sh dev --ui         # backend :8000 (/health, /docs) + landing page :5173
+
+# Both commands end with a rich console summary: local URLs (landing page, API docs,
+# health), the key reads (AGENTS.md, sprint-1 entry, drift guard), and project links.
+# Works on Linux/macOS/WSL (start.sh) and Windows PowerShell 5.1+ (start.ps1).
 
 # 4. Open it in your CLI — the agents are already there. Try:
 #    act as JANUS: scope a v1 for <your idea>

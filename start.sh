@@ -18,6 +18,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # CONFIGURATION — Edit this section per project
 # ============================================================================
 PROJECT_NAME="{{PROJECT_NAME}}"
+PROJECT_TAGLINE="One brain, every CLI — synaptix-scaffold template"   # CUSTOMIZE
+REPO_URL="https://github.com/SynaptixLabs/scaffold"                   # CUSTOMIZE: your repo
+ORG_URL="https://synaptixlabs.ai"                                     # CUSTOMIZE: your org/site
+LICENSE_NAME="MIT"
 BACKEND_TYPE="python"           # "python" | "node"
 BACKEND_DIR="backend"           # "." for monolith
 BACKEND_CMD="uvicorn app.main:app"  # Python entrypoint
@@ -31,6 +35,33 @@ ENV_FILE=".env"
 
 : "${PORT:=$DEFAULT_PORT}"
 log() { echo "[start.sh] $*"; }
+
+# colors (auto-off when not a terminal)
+if [ -t 1 ]; then
+  C_B=$'\033[1m'; C_CY=$'\033[36m'; C_GR=$'\033[32m'; C_DIM=$'\033[2m'; C_OFF=$'\033[0m'
+else
+  C_B=""; C_CY=""; C_GR=""; C_DIM=""; C_OFF=""
+fi
+
+# Rich info block — printed after setup and under the dev banner. $1 = "running"|"next".
+info_links() {
+  local mode="${1:-next}"
+  echo "   ${C_B}Local URLs${C_OFF}$([ "$mode" = "next" ] && echo " ${C_DIM}(after ./start.sh dev --ui)${C_OFF}")"
+  echo "     Marketing page   ${C_CY}http://localhost:$UI_PORT${C_OFF}"
+  echo "     API              ${C_CY}http://localhost:$PORT${C_OFF}"
+  echo "     API docs         ${C_CY}http://localhost:$PORT/docs${C_OFF}"
+  echo "     Health           ${C_CY}http://localhost:$PORT$HEALTH_PATH${C_OFF}"
+  echo ""
+  echo "   ${C_B}Read me first${C_OFF}"
+  echo "     Constitution     AGENTS.md   ·   Router  .claude/00_INDEX.md"
+  echo "     Sprint 1 entry   project-management/sprints/sprint_01/index.md"
+  echo "     Drift guard      python3 scripts/check_adapters.py"
+  echo ""
+  echo "   ${C_B}Project${C_OFF}"
+  echo "     GitHub           ${C_CY}$REPO_URL${C_OFF}"
+  echo "     Web              ${C_CY}$ORG_URL${C_OFF}"
+  echo "     License          $LICENSE_NAME (see LICENSE)"
+}
 
 find_python() {
   for p in "$SCRIPT_DIR/$BACKEND_DIR/.venv/bin/python" "$SCRIPT_DIR/$BACKEND_DIR/venv/bin/python"; do
@@ -102,9 +133,19 @@ cmd_setup() {
     (cd "$(backend_dir)" && "$(find_python)" -m pytest -q) || log "WARNING: tests not green — fix before starting sprint work."
   fi
   echo ""
-  log "Environment ready."
-  log "Sprint 1 entry:  project-management/sprints/sprint_01/index.md"
-  log "Start dev:       ./start.sh dev --ui"
+  echo "  ${C_CY}════════════════════════════════════════════════════${C_OFF}"
+  echo "   ${C_B}$PROJECT_NAME${C_OFF}  ${C_DIM}· $PROJECT_TAGLINE${C_OFF}"
+  echo "  ${C_CY}────────────────────────────────────────────────────${C_OFF}"
+  echo "   ${C_GR}✔ Environment ready — you're set for sprint 1.${C_OFF}"
+  echo ""
+  echo "   ${C_B}Run it${C_OFF}"
+  echo "     ./start.sh dev --ui    dev: backend + frontend"
+  echo "     ./start.sh test        run the test suite"
+  echo "     ./start.sh status      health check   ·   ./start.sh stop"
+  echo ""
+  info_links next
+  echo "  ${C_CY}════════════════════════════════════════════════════${C_OFF}"
+  echo ""
   exit 0
 }
 
@@ -193,14 +234,18 @@ cmd_dev() {
 
   # Banner
   echo ""
-  echo "  ============================================"
-  echo "   $PROJECT_NAME"
-  echo "  --------------------------------------------"
-  echo "   Build:    $BUILD_STAMP"
-  echo "   Backend:  http://localhost:$PORT"
-  $with_ui && echo "   Frontend: http://localhost:$UI_PORT"
-  echo "   Press Ctrl+C to stop"
-  echo "  ============================================"
+  echo "  ${C_CY}════════════════════════════════════════════════════${C_OFF}"
+  echo "   ${C_B}$PROJECT_NAME${C_OFF}  ${C_DIM}· $PROJECT_TAGLINE${C_OFF}"
+  echo "  ${C_CY}────────────────────────────────────────────────────${C_OFF}"
+  echo "   Build $BUILD_STAMP   ·   ${C_B}Ctrl+C to stop${C_OFF}"
+  echo ""
+  if $with_ui; then
+    info_links running
+  else
+    echo "   API   ${C_CY}http://localhost:$PORT${C_OFF}   docs ${C_CY}/docs${C_OFF}   health ${C_CY}$HEALTH_PATH${C_OFF}"
+    echo "   ${C_DIM}(frontend not started — use ./start.sh dev --ui)${C_OFF}"
+  fi
+  echo "  ${C_CY}════════════════════════════════════════════════════${C_OFF}"
   echo ""
 
   cd "$be_dir"
