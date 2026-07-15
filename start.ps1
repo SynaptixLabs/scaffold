@@ -79,7 +79,7 @@ function Find-Python {
 function Write-InfoLinks([string]$Mode = "next") {
     $suffix = if ($Mode -eq "next") { "  (after .\start.ps1)" } else { "" }
     Write-Host "   Local URLs$suffix" -ForegroundColor White
-    Write-Host "     Marketing page   http://localhost:$UIPort" -ForegroundColor Cyan
+    Write-Host "     Frontend         http://localhost:$UIPort" -ForegroundColor Cyan
     Write-Host "     API              http://localhost:$Port" -ForegroundColor Cyan
     Write-Host "     API docs         http://localhost:$Port/docs" -ForegroundColor Cyan
     Write-Host "     Health           http://localhost:$Port$HealthPath" -ForegroundColor Cyan
@@ -233,7 +233,6 @@ $py = $null
 if ($BackendType -eq "python") {
     Update-BackendEnv
     $py = Find-Python
-    Write-Host "[start.ps1] Python: $py" -ForegroundColor Cyan
 }
 
 # ── Validate .env ─────────────────────────────────────
@@ -259,22 +258,19 @@ if ($Test) {
 # ═══════════════════════════════════════════════════════
 # STEP 1: Kill stale processes
 # ═══════════════════════════════════════════════════════
-Write-Host "[start.ps1] Killing stale processes..." -ForegroundColor Yellow
 Clear-Port $Port
 if ($FrontendDir -and -not $BackendOnly) { Clear-Port $UIPort }
 Start-Sleep -Seconds 1
-Write-Host "[start.ps1] Processes cleared" -ForegroundColor Green
 
 # ═══════════════════════════════════════════════════════
 # STEP 2: Clean caches
 # ═══════════════════════════════════════════════════════
 if ($BackendType -eq "python") {
-    Write-Host "[start.ps1] Cleaning Python bytecache..." -ForegroundColor Yellow
     $cacheCount = 0
     Get-ChildItem -Path (Join-Path $ScriptDir $BackendDir) -Recurse -Directory -Filter "__pycache__" -ErrorAction SilentlyContinue |
         Where-Object { $_.FullName -notmatch '[\\\/]\.venv[\\\/]' } |
         ForEach-Object { Remove-Item $_.FullName -Recurse -Force -ErrorAction SilentlyContinue; $cacheCount++ }
-    Write-Host "[start.ps1] Removed $cacheCount __pycache__ directories" -ForegroundColor Green
+    if ($cacheCount -gt 0) { Write-Host "[start.ps1] Removed $cacheCount stale __pycache__ dir(s)" -ForegroundColor Yellow }
 }
 if ($FrontendDir) {
     $nextCache = Join-Path (Join-Path (Join-Path $ScriptDir $FrontendDir) ".next") "cache"
@@ -287,9 +283,8 @@ if ($FrontendDir) {
 # ═══════════════════════════════════════════════════════
 # STEP 3: Build stamp
 # ═══════════════════════════════════════════════════════
-$buildStamp = (Get-Date).ToString("yyyy-MM-dd_HH:mm:ss")
+$buildStamp = (Get-Date).ToString("yyyy-MM-dd_HH:mm:ss")   # shown in the banner
 $env:BUILD_STAMP = $buildStamp
-Write-Host "[start.ps1] Build stamp: $buildStamp" -ForegroundColor Green
 
 # ═══════════════════════════════════════════════════════
 # STEP 4: Start frontend (if applicable)
@@ -300,11 +295,9 @@ $startFrontend = $FrontendDir -and (-not $BackendOnly) -and (-not $Production)
 if ($startFrontend) {
     $feDir = Join-Path $ScriptDir $FrontendDir
     Update-FrontendEnv
-    Write-Host "[start.ps1] Starting frontend on http://localhost:$UIPort" -ForegroundColor Green
     $frontendJob = Start-Process -FilePath "cmd.exe" `
-        -ArgumentList "/c cd /d `"$feDir`" && npx vite --port $UIPort --host" `
+        -ArgumentList "/c cd /d `"$feDir`" && npx vite --port $UIPort --host --clearScreen false --logLevel warn" `
         -PassThru -NoNewWindow
-    Write-Host "[start.ps1] Frontend PID: $($frontendJob.Id)"
 }
 
 # ═══════════════════════════════════════════════════════

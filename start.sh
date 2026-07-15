@@ -47,7 +47,7 @@ fi
 info_links() {
   local mode="${1:-next}"
   echo "   ${C_B}Local URLs${C_OFF}$([ "$mode" = "next" ] && echo " ${C_DIM}(after ./start.sh dev --ui)${C_OFF}")"
-  echo "     Marketing page   ${C_CY}http://localhost:$UI_PORT${C_OFF}"
+  echo "     Frontend         ${C_CY}http://localhost:$UI_PORT${C_OFF}"
   echo "     API              ${C_CY}http://localhost:$PORT${C_OFF}"
   echo "     API docs         ${C_CY}http://localhost:$PORT/docs${C_OFF}"
   echo "     Health           ${C_CY}http://localhost:$PORT$HEALTH_PATH${C_OFF}"
@@ -205,9 +205,6 @@ cmd_dev() {
   if [ "$BACKEND_TYPE" = "python" ]; then
     ensure_backend_env
     PY="$(find_python)"
-    log "Python: $PY | Port: $PORT"
-  else
-    log "Node | Port: $PORT"
   fi
 
   # Kill stale, clean caches
@@ -220,16 +217,14 @@ cmd_dev() {
     find "$be_dir" -type d -name __pycache__ -not -path '*/.venv/*' -exec rm -rf {} + 2>/dev/null || true
   fi
 
-  # Build stamp
+  # Build stamp (shown in the banner)
   BUILD_STAMP=$(date "+%Y-%m-%d_%H:%M:%S"); export BUILD_STAMP
-  log "Build stamp: $BUILD_STAMP"
 
   # Start frontend in background
   if $with_ui && [ -n "$FRONTEND_DIR" ]; then
     local fe_dir="$SCRIPT_DIR/$FRONTEND_DIR"
     ensure_frontend_env
-    log "Starting frontend on http://localhost:$UI_PORT"
-    (cd "$fe_dir" && npx vite --port "$UI_PORT" --host) &
+    (cd "$fe_dir" && npx vite --port "$UI_PORT" --host --clearScreen false --logLevel warn) &
   fi
 
   # Banner
