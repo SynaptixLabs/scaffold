@@ -23,9 +23,9 @@
   `/ux-design` `/aria-uiux` (+ `/uiux`); CORE → `/core` `/dev` `/core-dev`. Subagent `name` fields
   are lowercase (`janus`); the uppercase persona (JANUS) is the display name in prose.
 - **In other CLIs:** `act as JANUS` or `$janus` (Codex), `/janus` (Gemini), the `janus` skill
-  (Devin — auto-trigger or `@skills:janus`), or let the Cursor rule route it. The `$name` / skill
-  entries live in `.agents/skills/` (the neutral path Codex + Devin both read). All resolve to the
-  same class contract.
+  (Devin — auto-trigger or `@skills:janus`), or Cursor's native `AGENTS.md` routing. The `$name` /
+  skill entries live in `.agents/skills/` (the neutral path Codex + Devin both read). All resolve
+  to the same class contract.
 
 ## Adding a persona
 

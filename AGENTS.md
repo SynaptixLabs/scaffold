@@ -23,8 +23,10 @@ surface (this `AGENTS.md`, `.agents/skills/`, `.cursor/`, `.gemini/`, `CLAUDE.md
 
 > **Codex & Devin** need no dedicated config dir: Codex reads this `AGENTS.md` (route with
 > `act as …`) plus skills from `.agents/skills/` (invoke with `$name`); Devin reads `AGENTS.md`
-> plus `.agents/skills/` (its recommended path). **Windsurf, Amp, Aider, Zed, Jules, Copilot…**
-> read `AGENTS.md` — free, no adapter.
+> plus `.agents/skills/` (its recommended skill path — it also scans `.claude/skills/` directly).
+> **Cursor** reads this `AGENTS.md` natively too (root + nested); its `.cursor/rules/` are
+> optional glob-scoped extras. **Windsurf, Amp, Aider, Zed, Jules, Copilot…** read `AGENTS.md` —
+> free, no adapter.
 
 ## 2. Prime directive — load the project's own context first
 
@@ -54,7 +56,8 @@ Per-CLI invocation (all resolve to the same class contract):
 - **Codex** → `act as JANUS` (plain text, this file) — or `$janus` to invoke the `.agents/skills/` skill.
 - **Claude Code** → `/janus` or `@janus`.
 - **Devin** → the `janus` skill (auto-triggered, or `@skills:janus`) from `.agents/skills/`.
-- **Gemini CLI** → `/janus`. **Cursor** → the `.cursor/rules/` route it.
+- **Gemini CLI** → `/janus`. **Cursor** → reads this file natively; `.cursor/rules/` add
+  glob-scoped extras.
 
 **Finding an agent by name.** Each agent answers to its **persona**, its **class**, and a
 **compound `<persona>-<class>`** alias — plus any **functional keyword** you add. All resolve to the

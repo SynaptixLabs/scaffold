@@ -76,6 +76,15 @@ def _mut_gemini_only_command(root: Path) -> None:
     )
 
 
+def _mut_missing_neutral_skill(root: Path) -> None:
+    shutil.rmtree(root / ".agents/skills/janus-cpto")
+
+
+def _mut_canonical_skill_no_description(root: Path) -> None:
+    f = root / ".claude/skills/qa-gate/SKILL.md"
+    f.write_text(f.read_text().replace("description:", "desc_x:", 1), encoding="utf-8")
+
+
 def _mut_dangling_pointer(root: Path) -> None:
     f = root / "AGENTS.md"
     f.write_text(f.read_text() + "\n\nBroken ref: `.claude/roles/does-not-exist.md`\n", encoding="utf-8")
@@ -92,6 +101,8 @@ MUTATIONS = {
     "functional alias missing for Gemini": _mut_missing_gemini_alias,
     "process command missing for Gemini": _mut_missing_gemini_process_cmd,
     "Gemini-only command with no Claude twin": _mut_gemini_only_command,
+    "command missing its neutral .agents/skills twin": _mut_missing_neutral_skill,
+    "canonical .claude/skills SKILL.md without description": _mut_canonical_skill_no_description,
     "dangling pointer in an adapter": _mut_dangling_pointer,
     "persona bound to a non-existent class": _mut_bad_class_ref,
 }

@@ -37,9 +37,10 @@ Route by **capability**, not persona preference.
   or `act as <PERSONA>` (`act as JANUS`). **A persona is-a class; class always wins.**
 - Claude Code: subagents in `agents/` + slash commands in `commands/` (`/janus`, `/aria`, `/core`, + aliases).
 - Codex: plain text `act as …` (reads `AGENTS.md`) — or `$janus` to run the `.agents/skills/` skill.
-- Devin: skill `janus`/`cpto` — auto-triggered or `@skills:janus` (from `.agents/skills/`, its #1 path).
-- Gemini CLI: `/janus` (commands in `.gemini/commands/`).
-- Cursor: rules in `.cursor/rules/` route it.
+- Devin: skill `janus`/`cpto` — auto-triggered or `@skills:janus` (from `.agents/skills/`, its
+  recommended path; it also scans `.claude/skills/` directly).
+- Gemini CLI: `/janus` (commands in `.gemini/commands/` — full parity with Claude's, CI-enforced).
+- Cursor: reads `AGENTS.md` natively (root + nested); `.cursor/rules/` add glob-scoped extras.
 
 Each agent answers to its **persona**, its **class**, and a **compound `<persona>-<class>`** alias
 (all resolve to the same class): JANUS → `janus`/`cpto`/`janus-cpto`; CORE → `core`/`dev`/`core-dev`;

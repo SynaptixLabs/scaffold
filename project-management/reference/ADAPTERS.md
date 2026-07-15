@@ -6,8 +6,8 @@
 ## The problem this solves
 
 Every AI coding CLI wants its own config file: Claude Code reads `CLAUDE.md` + `.claude/`, Codex
-reads `AGENTS.md` (+ skills from `.agents/skills/`), Cursor reads `.cursor/rules/`, Gemini CLI reads
-`GEMINI.md` + `.gemini/`. Maintain them separately and they drift: your CPTO role says one thing in
+reads `AGENTS.md` (+ skills from `.agents/skills/`), Cursor reads `AGENTS.md` + optional
+`.cursor/rules/`, Gemini CLI reads `GEMINI.md` + `.gemini/`. Maintain them separately and they drift: your CPTO role says one thing in
 Cursor and another in Codex, and no one notices until an agent does the wrong thing.
 
 ## The pattern — canonical brain + thin adapters

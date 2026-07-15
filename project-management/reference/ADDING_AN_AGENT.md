@@ -58,7 +58,7 @@ Class always wins. Load `../policies/commandments.md` + `../policies/e2e-doctrin
 |---|---|---|
 | Claude | `.claude/commands/vera.md` + `.claude/commands/qa.md` | agent / role |
 | Codex + Devin | `.agents/skills/vera/SKILL.md` + `.agents/skills/qa/SKILL.md` (`$vera` in Codex, auto/`@skills:vera` in Devin) | agent / role |
-| Cursor | a row in `.cursor/rules/10-roles.mdc` | `.claude/roles/qa.md` |
+| Cursor | a row in `.cursor/rules/10-roles.mdc` (Cursor reads `AGENTS.md` natively — this just keeps the shipped rules in sync) | `.claude/roles/qa.md` |
 | Gemini | `.gemini/commands/vera.toml` | `.claude/agents/vera.md` |
 
 Each adapter is 5–10 lines: frontmatter + "read the canonical file and follow it". **Never** paste

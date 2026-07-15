@@ -15,8 +15,9 @@ Checks (stdlib only, no dependencies):
   3. Every persona is named in the AGENTS.md routing tables (case-insensitive) so AGENTS.md-aware
      tools can see it, and the Claude and Gemini command sets are in FULL parity — every
      `/command` shipped for one (persona, class, alias, or process command) exists for the other
-     (when Gemini support is present) — so a command can't be added to one CLI and forgotten in
-     another.
+     (when Gemini support is present), and every Claude `/command` has a neutral
+     `.agents/skills/<name>/SKILL.md` twin (Codex `$name` / Devin) — so a command can't be added
+     to one CLI and forgotten in another.
   4. Pointer resolution: every `.claude/...`, `../roles/...`, `../policies/...`, `../skills/...`,
      `../agents/...` path referenced in the canonical brain and in the adapters resolves to a real
      file.
@@ -192,18 +193,39 @@ def _resolves(root: Path, f: Path, token: str) -> bool:
 
 
 def check_skill_frontmatter(root: Path) -> None:
-    """.agents/skills/*/SKILL.md must carry the required frontmatter (name + description) —
-    the shape Codex and Devin both parse."""
-    for skill in (root / ".agents/skills").glob("*/SKILL.md"):
-        text = skill.read_text(encoding="utf-8")
-        m = re.search(r"^---\s*$(.*?)^---\s*$", text, re.DOTALL | re.MULTILINE)
-        if not m:
-            fail(f"skill {skill.parent.name}: missing YAML frontmatter")
-            continue
-        fm = m.group(1)
-        for field in ("name", "description"):
-            if not re.search(rf"^{field}:\s*\S", fm, re.MULTILINE):
-                fail(f"skill {skill.parent.name}: frontmatter missing `{field}`")
+    """Every SKILL.md must carry the required frontmatter (name + description) — the shape Codex
+    and Devin both parse. Covers `.agents/skills/` (the neutral surface) AND `.claude/skills/`
+    (the canonical skills — Devin scans that path directly too)."""
+    for base in (".agents/skills", ".claude/skills"):
+        for skill in (root / base).glob("*/SKILL.md"):
+            text = skill.read_text(encoding="utf-8")
+            m = re.search(r"^---\s*$(.*?)^---\s*$", text, re.DOTALL | re.MULTILINE)
+            if not m:
+                fail(f"skill {base}/{skill.parent.name}: missing YAML frontmatter")
+                continue
+            fm = m.group(1)
+            for field in ("name", "description"):
+                if not re.search(rf"^{field}:\s*\S", fm, re.MULTILINE):
+                    fail(f"skill {base}/{skill.parent.name}: frontmatter missing `{field}`")
+
+
+def check_neutral_skill_projection(root: Path) -> None:
+    """Every Claude `/command` must also exist as a neutral `.agents/skills/<name>/SKILL.md` —
+    the surface Codex (`$name`) and Devin (`@skills:name`) read — so a command can't ship for the
+    command CLIs and be silently forgotten for the skill CLIs. One-way by design: extra skills
+    (canonical process skills that aren't commands) are fine."""
+    skills_dir = root / ".agents/skills"
+    if not skills_dir.is_dir():
+        return
+    skills = {p.name for p in skills_dir.iterdir() if (p / "SKILL.md").exists()}
+    for cmd in sorted(p.stem for p in (root / ".claude/commands").glob("*.md")):
+        if cmd not in skills:
+            fail(
+                f".agents/skills/{cmd}/SKILL.md is missing — '/{cmd}' ships for the command CLIs "
+                f"(Claude/Gemini) but has no neutral skill twin for Codex (`${cmd}`) / Devin "
+                f"(`@skills:{cmd}`); the skill surface has drifted. Add the thin SKILL.md (or "
+                f"drop the command everywhere)."
+            )
 
 
 def check_pointers(root: Path) -> None:
@@ -265,6 +287,7 @@ def main() -> int:
     check_routing_parity(root, personas)
     check_command_projection(root, personas, classes)
     check_tool_grants(root, personas)
+    check_neutral_skill_projection(root)
     check_skill_frontmatter(root)
     check_pointers(root)
     check_no_pasted_bodies(root)

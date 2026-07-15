@@ -147,8 +147,8 @@ reports back with files touched + evidence.
 
 ```bash
 python3 scripts/check_adapters.py         # every persona → real class, pointers resolve, no pasted bodies,
-                                          # routing tables agree, Claude ↔ Gemini command parity,
-                                          # no persona over-grants its class
+                                          # routing tables agree, cross-CLI command parity (Gemini
+                                          # twins + Codex/Devin $skill twins), no persona over-grants its class
 python3 scripts/check_adapters_selftest.py  # proves the guard actually catches drift
 ```
 
