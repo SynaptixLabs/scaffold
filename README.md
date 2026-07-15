@@ -72,10 +72,13 @@ scaffold/
 │   └── reference/              how-the-scaffold-works docs (ADAPTERS, ADDING_AN_AGENT)
 │
 ├── scripts/check_adapters.py   the CI drift guard (+ check_adapters_selftest.py)
-├── backend/ · frontend/ · shared/ · ml-ai-data/   project skeleton (each has a Tier-2 AGENTS.md)
+├── backend/ · frontend/ · shared/ · ml-ai-data/   runnable skeleton (each has a Tier-2 AGENTS.md):
+│                               backend = minimal FastAPI app (app/main.py, /health) + example module w/ tests;
+│                               frontend = minimal Vite page wired to backend /health
 ├── tests/                      test root — screenshots/ is the E2E evidence target (your tests land here)
 ├── .github/workflows/ci.yml    runs the drift guard on every push/PR
-├── start.sh · start.ps1 · .env.example · pyproject.toml   project bootstrap (customize per project)
+├── start.sh · start.ps1        setup (env update, sprint-1 ready) · dev · test · status · stop
+├── .env.example · pyproject.toml   project bootstrap (customize per project)
 └── LICENSE (MIT) · CONTRIBUTING.md · CHANGELOG.md
 ```
 
@@ -160,13 +163,16 @@ python3 scripts/check_adapters_selftest.py  # proves the guard actually catches 
 git clone https://github.com/SynaptixLabs/scaffold.git my-project
 cd my-project && rm -rf .git && git init
 
-# 2. Open it in your CLI — the agents are already there. Try:
+# 2. Set up / update the environment — deps, .env, drift guard, tests. Sprint-1 ready.
+./start.sh setup            # Windows: .\start.ps1 -Setup
+
+# 3. Run it — the template starts out of the box
+./start.sh dev --ui         # backend :8000 (/health, /docs) + frontend :5173
+
+# 4. Open it in your CLI — the agents are already there. Try:
 #    act as JANUS: scope a v1 for <your idea>
 
-# 3. Verify the agent layer is consistent
-python3 scripts/check_adapters.py
-
-# 4. Make it yours (see "Customize")
+# 5. Make it yours (see "Customize")
 ```
 
 ## Customize

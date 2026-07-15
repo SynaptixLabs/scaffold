@@ -20,6 +20,7 @@
     Backend port (default from config or 8000).
 #>
 param(
+    [switch]$Setup,
     [switch]$Stop,
     [switch]$Production,
     [switch]$BackendOnly,
@@ -52,8 +53,10 @@ if ($Port -eq 0) {
     $envPath = Join-Path (Join-Path $ScriptDir $BackendDir) $EnvFileName
     if ($BackendDir -eq ".") { $envPath = Join-Path $ScriptDir $EnvFileName }
     if (Test-Path $envPath) {
-        $portLine = Get-Content $envPath | Where-Object { $_ -match "^PORT=" }
-        if ($portLine) { $Port = [int]($portLine -replace "^PORT=","") }
+        $portLine = Get-Content $envPath | Where-Object { $_ -match "^PORT=" } | Select-Object -First 1
+        # tolerate placeholders/junk (e.g. a fresh .env still carrying PORT={{DEV_PORT}})
+        $portVal = if ($portLine) { ($portLine -replace "^PORT=", "").Trim() } else { "" }
+        if ($portVal -match '^\d+$') { $Port = [int]$portVal }
     }
     if ($Port -eq 0) { $Port = $DefaultPort }
 }
@@ -66,6 +69,54 @@ function Find-Python {
     )
     foreach ($p in $candidates) { if (Test-Path $p) { return $p } }
     return "python"
+}
+
+# ── Environment setup/update (mirrors start.sh ensure_*) ──
+function Get-BackendDir {
+    if ($BackendDir -eq ".") { $ScriptDir } else { Join-Path $ScriptDir $BackendDir }
+}
+
+function Find-SystemPython {
+    if (Get-Command python -ErrorAction SilentlyContinue) { return "python" }
+    if (Get-Command py -ErrorAction SilentlyContinue) { return "py" }
+    return $null
+}
+
+# Create/refresh the backend venv. Cheap when current: a stamp file tracks the last
+# install, so deps re-install only when requirements.txt is newer.
+function Update-BackendEnv {
+    if ($BackendType -ne "python") { return }
+    $beDir = Get-BackendDir
+    $req = Join-Path $beDir "requirements.txt"
+    if (-not (Test-Path $req)) { return }
+    $venv = Join-Path $beDir ".venv"
+    $venvPy = Join-Path $venv "Scripts\python.exe"
+    if (-not (Test-Path $venvPy)) {
+        $sysPy = Find-SystemPython
+        if (-not $sysPy) { Write-Host "[start.ps1] WARNING: no python/py on PATH - cannot create venv" -ForegroundColor Yellow; return }
+        Write-Host "[start.ps1] Creating backend venv..." -ForegroundColor Yellow
+        & $sysPy -m venv $venv
+    }
+    $stamp = Join-Path $venv ".deps-stamp"
+    if ((-not (Test-Path $stamp)) -or ((Get-Item $req).LastWriteTime -gt (Get-Item $stamp).LastWriteTime)) {
+        Write-Host "[start.ps1] Installing/updating backend deps (requirements.txt)..." -ForegroundColor Yellow
+        & $venvPy -m pip install -q -r $req
+        New-Item -ItemType File -Path $stamp -Force | Out-Null
+    }
+}
+
+# npm install when node_modules is missing or package.json changed.
+function Update-FrontendEnv {
+    if (-not $FrontendDir) { return }
+    $feDir = Join-Path $ScriptDir $FrontendDir
+    $pkg = Join-Path $feDir "package.json"
+    if (-not (Test-Path $pkg)) { return }
+    $stamp = Join-Path (Join-Path $feDir "node_modules") ".deps-stamp"
+    if ((-not (Test-Path $stamp)) -or ((Get-Item $pkg).LastWriteTime -gt (Get-Item $stamp).LastWriteTime)) {
+        Write-Host "[start.ps1] Installing/updating frontend deps (package.json)..." -ForegroundColor Yellow
+        Push-Location $feDir; npm.cmd install --silent; Pop-Location
+        New-Item -ItemType File -Path $stamp -Force | Out-Null
+    }
 }
 
 # ── Kill process on port ──────────────────────────────
@@ -111,9 +162,42 @@ if ($Status) {
     return
 }
 
+# ── Setup command ─────────────────────────────────────
+if ($Setup) {
+    Write-Host "[start.ps1] Setting up / updating the environment..." -ForegroundColor Cyan
+    Update-BackendEnv
+    Update-FrontendEnv
+    # .env from the example (never overwrites an existing one)
+    $envDst = Join-Path (Get-BackendDir) $EnvFileName
+    $envExample = Join-Path $ScriptDir ".env.example"
+    if ((-not (Test-Path $envDst)) -and (Test-Path $envExample)) {
+        Copy-Item $envExample $envDst
+        Write-Host "[start.ps1] Created $envDst from .env.example - fill in real values." -ForegroundColor Yellow
+    }
+    # verify: agent layer consistent + tests green (evidence, not assertion)
+    $guard = Join-Path (Join-Path $ScriptDir "scripts") "check_adapters.py"
+    $sysPy = Find-SystemPython
+    if ((Test-Path $guard) -and $sysPy) { & $sysPy $guard $ScriptDir }
+    if ($BackendType -eq "python") {
+        $venvPy = Join-Path (Join-Path (Get-BackendDir) ".venv") "Scripts\python.exe"
+        if (Test-Path $venvPy) {
+            Push-Location (Get-BackendDir)
+            & $venvPy -m pytest -q
+            if ($LASTEXITCODE -ne 0) { Write-Host "[start.ps1] WARNING: tests not green - fix before starting sprint work." -ForegroundColor Yellow }
+            Pop-Location
+        }
+    }
+    Write-Host ""
+    Write-Host "[start.ps1] Environment ready." -ForegroundColor Green
+    Write-Host "[start.ps1] Sprint 1 entry:  project-management\sprints\sprint_01\index.md" -ForegroundColor Green
+    Write-Host "[start.ps1] Start dev:       .\start.ps1" -ForegroundColor Green
+    return
+}
+
 # ── Resolve runtime ───────────────────────────────────
 $py = $null
 if ($BackendType -eq "python") {
+    Update-BackendEnv
     $py = Find-Python
     Write-Host "[start.ps1] Python: $py" -ForegroundColor Cyan
 }
@@ -181,10 +265,7 @@ $startFrontend = $FrontendDir -and (-not $BackendOnly) -and (-not $Production)
 
 if ($startFrontend) {
     $feDir = Join-Path $ScriptDir $FrontendDir
-    if (-not (Test-Path (Join-Path $feDir "node_modules"))) {
-        Write-Host "[start.ps1] Installing frontend dependencies..." -ForegroundColor Yellow
-        Push-Location $feDir; npm.cmd install; Pop-Location
-    }
+    Update-FrontendEnv
     Write-Host "[start.ps1] Starting frontend on http://localhost:$UIPort" -ForegroundColor Green
     $frontendJob = Start-Process -FilePath "cmd.exe" `
         -ArgumentList "/c cd /d `"$feDir`" && npx vite --port $UIPort --host" `

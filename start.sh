@@ -4,8 +4,9 @@
 # Based on AGENTS project start.sh patterns.
 #
 # Usage:
+#   ./start.sh setup        # One-time/refresh: install deps, create .env, verify — sprint-1 ready
 #   ./start.sh              # Production (default for Docker/CI)
-#   ./start.sh dev          # Local dev: backend (--reload)
+#   ./start.sh dev          # Local dev: backend (--reload); auto-updates deps when they changed
 #   ./start.sh dev --ui     # Local dev: backend + frontend
 #   ./start.sh test         # Run tests
 #   ./start.sh stop         # Kill project processes
@@ -39,14 +40,74 @@ find_python() {
 }
 
 kill_port() {
-  local pid; pid=$(lsof -ti :"$1" 2>/dev/null || true)
-  [ -n "$pid" ] && { log "Port $1 in use by PID $pid — killing..."; kill -9 "$pid" 2>/dev/null || true; sleep 1; }
+  # Must always return 0: under `set -e`, a nonzero return from the port-is-free
+  # case would abort the whole script. lsof may return multiple PIDs → xargs.
+  local pids; pids=$(lsof -ti :"$1" 2>/dev/null || true)
+  if [ -n "$pids" ]; then
+    log "Port $1 in use by PID(s) $(echo $pids | tr '\n' ' ')— killing..."
+    echo "$pids" | xargs -r kill -9 2>/dev/null || true
+    sleep 1
+  fi
 }
 
 # dev-mode only (set in cmd_dev): kill the background frontend when the backend exits
 cleanup() { log "Shutting down..."; jobs -p 2>/dev/null | xargs -r kill 2>/dev/null || true; }
 
+backend_dir() { [ "$BACKEND_DIR" = "." ] && echo "$SCRIPT_DIR" || echo "$SCRIPT_DIR/$BACKEND_DIR"; }
+
+# Create/refresh the backend venv. Cheap when current: a stamp file tracks the last install,
+# so deps re-install only when requirements.txt is newer (that's the "update" in update-the-env).
+ensure_backend_env() {
+  [ "$BACKEND_TYPE" = "python" ] || return 0
+  local be_dir; be_dir="$(backend_dir)"
+  local req="$be_dir/requirements.txt" venv="$be_dir/.venv"
+  [ -f "$req" ] || return 0
+  if [ ! -x "$venv/bin/python" ]; then
+    log "Creating backend venv..."
+    python3 -m venv "$venv"
+  fi
+  local stamp="$venv/.deps-stamp"
+  if [ ! -f "$stamp" ] || [ "$req" -nt "$stamp" ]; then
+    log "Installing/updating backend deps (requirements.txt)..."
+    "$venv/bin/pip" install -q -r "$req" && touch "$stamp"
+  fi
+}
+
+# Same idea for the frontend: npm install when node_modules is missing or package.json changed.
+ensure_frontend_env() {
+  [ -n "$FRONTEND_DIR" ] || return 0
+  local fe_dir="$SCRIPT_DIR/$FRONTEND_DIR" pkg stamp
+  pkg="$fe_dir/package.json"; stamp="$fe_dir/node_modules/.deps-stamp"
+  [ -f "$pkg" ] || return 0
+  if [ ! -d "$fe_dir/node_modules" ] || [ ! -f "$stamp" ] || [ "$pkg" -nt "$stamp" ]; then
+    log "Installing/updating frontend deps (package.json)..."
+    (cd "$fe_dir" && npm install --silent) && touch "$stamp"
+  fi
+}
+
 # ── Commands ──────────────────────────────────────────
+cmd_setup() {
+  log "Setting up / updating the environment..."
+  ensure_backend_env
+  ensure_frontend_env
+  # .env from the example (never overwrites an existing one)
+  local env_dst; env_dst="$(backend_dir)/$ENV_FILE"
+  if [ ! -f "$env_dst" ] && [ -f "$SCRIPT_DIR/.env.example" ]; then
+    cp "$SCRIPT_DIR/.env.example" "$env_dst"
+    log "Created $env_dst from .env.example — fill in real values."
+  fi
+  # verify: agent layer consistent + tests green (evidence, not assertion)
+  [ -f "$SCRIPT_DIR/scripts/check_adapters.py" ] && python3 "$SCRIPT_DIR/scripts/check_adapters.py" "$SCRIPT_DIR"
+  if [ "$BACKEND_TYPE" = "python" ]; then
+    (cd "$(backend_dir)" && "$(find_python)" -m pytest -q) || log "WARNING: tests not green — fix before starting sprint work."
+  fi
+  echo ""
+  log "Environment ready."
+  log "Sprint 1 entry:  project-management/sprints/sprint_01/index.md"
+  log "Start dev:       ./start.sh dev --ui"
+  exit 0
+}
+
 cmd_stop() { kill_port "$PORT"; [ -n "$FRONTEND_DIR" ] && kill_port "$UI_PORT"; log "Done."; exit 0; }
 
 cmd_status() {
@@ -85,8 +146,8 @@ cmd_production() {
   [ "$BACKEND_DIR" = "." ] && be_dir="$SCRIPT_DIR"
   cd "$be_dir"
   if [ "$BACKEND_TYPE" = "python" ]; then
+    ensure_backend_env
     local PY; PY="$(find_python)"
-    [ -f requirements.txt ] && "$PY" -m pip install --no-cache-dir -r requirements.txt
     log "Starting $BACKEND_CMD on 0.0.0.0:${PORT} (production)"
     exec "$PY" -m $BACKEND_CMD --host 0.0.0.0 --port "${PORT}"
   else
@@ -101,6 +162,7 @@ cmd_dev() {
 
   local PY=""
   if [ "$BACKEND_TYPE" = "python" ]; then
+    ensure_backend_env
     PY="$(find_python)"
     log "Python: $PY | Port: $PORT"
   else
@@ -124,7 +186,7 @@ cmd_dev() {
   # Start frontend in background
   if $with_ui && [ -n "$FRONTEND_DIR" ]; then
     local fe_dir="$SCRIPT_DIR/$FRONTEND_DIR"
-    [ ! -d "$fe_dir/node_modules" ] && (cd "$fe_dir" && npm install)
+    ensure_frontend_env
     log "Starting frontend on http://localhost:$UI_PORT"
     (cd "$fe_dir" && npx vite --port "$UI_PORT" --host) &
   fi
@@ -155,6 +217,7 @@ cmd_dev() {
 
 # ── Main dispatch ─────────────────────────────────────
 case "${1:-production}" in
+  setup)      cmd_setup ;;
   stop)       cmd_stop ;;
   status)     cmd_status ;;
   test)       shift; cmd_test "$@" ;;
