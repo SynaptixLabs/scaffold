@@ -43,8 +43,8 @@ kill_port() {
   [ -n "$pid" ] && { log "Port $1 in use by PID $pid — killing..."; kill -9 "$pid" 2>/dev/null || true; sleep 1; }
 }
 
+# dev-mode only (set in cmd_dev): kill the background frontend when the backend exits
 cleanup() { log "Shutting down..."; jobs -p 2>/dev/null | xargs -r kill 2>/dev/null || true; }
-trap cleanup EXIT
 
 # ── Commands ──────────────────────────────────────────
 cmd_stop() { kill_port "$PORT"; [ -n "$FRONTEND_DIR" ] && kill_port "$UI_PORT"; log "Done."; exit 0; }
@@ -69,7 +69,12 @@ cmd_status() {
 cmd_test() {
   local PY; PY="$(find_python)"
   if [ "$BACKEND_TYPE" = "python" ]; then
-    cd "$SCRIPT_DIR/$BACKEND_DIR" && "$PY" -m pytest -v --tb=short
+    cd "$SCRIPT_DIR/$BACKEND_DIR"
+    "$PY" -m pytest -v --tb=short || {
+      rc=$?
+      [ "$rc" -eq 5 ] && log "pytest collected no tests — the template ships none; add yours under $BACKEND_DIR/."
+      exit "$rc"
+    }
   else
     cd "$SCRIPT_DIR" && npm test
   fi
@@ -80,15 +85,17 @@ cmd_production() {
   [ "$BACKEND_DIR" = "." ] && be_dir="$SCRIPT_DIR"
   cd "$be_dir"
   if [ "$BACKEND_TYPE" = "python" ]; then
-    [ -f requirements.txt ] && pip install --no-cache-dir -r requirements.txt
+    local PY; PY="$(find_python)"
+    [ -f requirements.txt ] && "$PY" -m pip install --no-cache-dir -r requirements.txt
     log "Starting $BACKEND_CMD on 0.0.0.0:${PORT} (production)"
-    exec python -m $BACKEND_CMD --host 0.0.0.0 --port "${PORT}"
+    exec "$PY" -m $BACKEND_CMD --host 0.0.0.0 --port "${PORT}"
   else
     npm run build && exec npm run start
   fi
 }
 
 cmd_dev() {
+  trap cleanup EXIT   # dev runs a background frontend job; reap it on exit
   local with_ui=false
   [[ "${1:-}" == "--ui" ]] && with_ui=true
 

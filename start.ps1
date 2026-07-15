@@ -48,7 +48,8 @@ $EnvFileName     = ".env"                       # Env file name (relative to Bac
 
 if ($Port -eq 0) {
     # Try reading PORT from .env
-    $envPath = Join-Path $ScriptDir $BackendDir $EnvFileName
+    # nested Join-Path (not the 3-arg form) — Windows PowerShell 5.1 compatible
+    $envPath = Join-Path (Join-Path $ScriptDir $BackendDir) $EnvFileName
     if ($BackendDir -eq ".") { $envPath = Join-Path $ScriptDir $EnvFileName }
     if (Test-Path $envPath) {
         $portLine = Get-Content $envPath | Where-Object { $_ -match "^PORT=" }
@@ -60,8 +61,8 @@ if ($Port -eq 0) {
 # ── Find Python ───────────────────────────────────────
 function Find-Python {
     $candidates = @(
-        (Join-Path $ScriptDir $BackendDir ".venv\Scripts\python.exe"),
-        (Join-Path $ScriptDir $BackendDir "venv\Scripts\python.exe")
+        (Join-Path (Join-Path $ScriptDir $BackendDir) ".venv\Scripts\python.exe"),
+        (Join-Path (Join-Path $ScriptDir $BackendDir) "venv\Scripts\python.exe")
     )
     foreach ($p in $candidates) { if (Test-Path $p) { return $p } }
     return "python"
@@ -118,7 +119,7 @@ if ($BackendType -eq "python") {
 }
 
 # ── Validate .env ─────────────────────────────────────
-$envCheck = if ($BackendDir -eq ".") { Join-Path $ScriptDir $EnvFileName } else { Join-Path $ScriptDir $BackendDir $EnvFileName }
+$envCheck = if ($BackendDir -eq ".") { Join-Path $ScriptDir $EnvFileName } else { Join-Path (Join-Path $ScriptDir $BackendDir) $EnvFileName }
 if (-not (Test-Path $envCheck)) {
     Write-Host "[start.ps1] WARNING: $EnvFileName not found at $envCheck" -ForegroundColor Yellow
 }
@@ -158,7 +159,7 @@ if ($BackendType -eq "python") {
     Write-Host "[start.ps1] Removed $cacheCount __pycache__ directories" -ForegroundColor Green
 }
 if ($FrontendDir) {
-    $nextCache = Join-Path $ScriptDir $FrontendDir ".next" "cache"
+    $nextCache = Join-Path (Join-Path (Join-Path $ScriptDir $FrontendDir) ".next") "cache"
     if (Test-Path $nextCache) {
         Remove-Item -Recurse -Force $nextCache -ErrorAction SilentlyContinue
         Write-Host "[start.ps1] Cleared .next/cache" -ForegroundColor Green
