@@ -14,8 +14,8 @@ more maintaining a separate config per tool and watching them drift apart.
 ## Why this exists
 
 Every AI coding CLI wants its own instruction file: Claude Code reads `CLAUDE.md` + `.claude/`,
-Codex reads `AGENTS.md`, Cursor reads `.cursor/rules/`, Gemini reads `GEMINI.md`, Devin has its own
-skills. Maintain them by hand and they **drift** — your "CPTO" role says one thing in Cursor and
+Codex reads `AGENTS.md`, Cursor reads `AGENTS.md` + `.cursor/rules/`, Gemini reads `GEMINI.md`,
+Devin reads skills. Maintain them by hand and they **drift** — your "CPTO" role says one thing in Cursor and
 another in Codex, and nobody notices until an agent does the wrong thing.
 
 This scaffold fixes that with one rule: **`.claude/` is the single source of truth, and every other
@@ -192,13 +192,26 @@ python3 scripts/check_adapters.py
 |---|---|---|
 | Claude Code | `CLAUDE.md` + `.claude/` | `/janus`, `/aria`, `/core` + class & alias commands (`/cpto`, `/uiux`, `/aria-uiux`, …) |
 | Codex | `AGENTS.md` + `.agents/skills/` | `act as JANUS` — or `$janus` / `$cpto` / `$janus-cpto` |
-| Cursor | `AGENTS.md` + `.cursor/rules/` | rules route `act as …` |
-| Gemini CLI | `GEMINI.md` + `.gemini/` | same command set as Claude Code (`/janus`, `/aria`, `/core`, …) — parity CI-enforced |
-| Devin | `AGENTS.md` + `.agents/skills/` | `janus` skill (auto / `@skills:janus`) |
+| Cursor | `AGENTS.md` (native, root + nested) + optional `.cursor/rules/` | `act as …` (`AGENTS.md` routes it; the rules add glob-scoped extras) |
+| Gemini CLI | `GEMINI.md` (its default) + `AGENTS.md` via the shipped `.gemini/settings.json` bridge | same command set as Claude Code (`/janus`, `/aria`, `/core`, …) — parity CI-enforced |
+| Devin | `.agents/skills/` (its recommended path — of 8 scanned, incl. `.claude/skills/`) | `janus` skill (auto / `@skills:janus`) |
 | Windsurf · Amp · Aider · Zed · Jules · Copilot · … | `AGENTS.md` | `act as …` (free — one spine, no dedicated adapter) |
 
 Process commands (`/gbu` · `/review` · `/plan` · `/e2e` · `/qa-gate` · `/release-gate`) exist on
 every command surface: Claude `/x`, Gemini `/x`, Codex `$x`, Devin `@skills:x`.
+
+**SOTA note (verified 2026-07).** [`AGENTS.md`](https://agents.md) is the converging open standard
+(20+ tools, including Cursor, Gemini CLI, Devin, and Windsurf), so the dedicated dirs keep
+shrinking — the scaffold ships one only where it still adds something the spine can't do:
+- **Cursor** reads `AGENTS.md` natively (root **and** nested), so `.cursor/rules/` here is an
+  *optional enhancement* — glob-scoped auto-attach (e.g. the E2E rule on test files), which
+  `AGENTS.md` can't express. Only the legacy single-file `.cursorrules` is deprecated, not
+  `.cursor/rules/*.mdc`.
+- **Gemini CLI** does *not* read `AGENTS.md` by default — `GEMINI.md` is its context file, and the
+  scaffold's `.gemini/settings.json` adds `AGENTS.md` to the load list (`GEMINI.md` wins if both
+  exist). `.gemini/commands/` remains the only way to get slash commands.
+- **Devin** needs no dedicated dir: `.agents/skills/` is its officially recommended skill path,
+  and it also scans `.claude/skills/` — so even the canonical skills are picked up directly.
 
 ---
 

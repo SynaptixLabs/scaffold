@@ -61,8 +61,8 @@ tool-neutral Markdown.
 |---|---|---|---|
 | **Claude Code** | `CLAUDE.md`, `.claude/` | `/janus` `/cpto` (subagents + commands) | Canonical store is its own native tree. Subagent `name` must be lowercase-hyphen. |
 | **Codex** | `AGENTS.md` + `.agents/skills/` | `act as JANUS` (plain text) — or `$janus` | No dedicated dir. Codex scans `.agents/skills/` for `$name` skills; custom prompts are deprecated. |
-| **Cursor** | `AGENTS.md`, `.cursor/rules/*.mdc` | rules route it (`10-roles.mdc`) | Base rule always-on; E2E rule auto-attaches on test files. |
-| **Gemini CLI** | `GEMINI.md`, `AGENTS.md`, `.gemini/` | `/janus` `/aria` (`.gemini/commands/*.toml`) | `settings.json` loads both context files. |
+| **Cursor** | `AGENTS.md` (native, root + nested), `.cursor/rules/*.mdc` | `act as …` (`AGENTS.md` routes it; `10-roles.mdc` reinforces) | Rules are an optional add-on for glob-scoped activation (E2E rule auto-attaches on test files). Only legacy single-file `.cursorrules` is deprecated. |
+| **Gemini CLI** | `GEMINI.md` (default), `AGENTS.md` (via settings), `.gemini/` | `/janus` `/aria` (`.gemini/commands/*.toml`) | `settings.json` adds `AGENTS.md` to `context.fileName` — not loaded by default; `GEMINI.md` wins if both exist. |
 | **Devin** | `AGENTS.md` + `.agents/skills/` (its #1 recommended path; also scans `.claude/skills/`) | `janus` skill (auto-trigger / `@skills:janus`) | No dedicated dir. `SKILL.md` frontmatter: `name`/`description`/`argument-hint`/`triggers`. |
 | **Windsurf · Amp · Aider · Zed · Jules · Copilot · …** | `AGENTS.md` | `act as …` | Free — they all read the one spine. No adapter. |
 
