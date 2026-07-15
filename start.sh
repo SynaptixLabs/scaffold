@@ -21,7 +21,7 @@ BACKEND_TYPE="python"           # "python" | "node"
 BACKEND_DIR="backend"           # "." for monolith
 BACKEND_CMD="uvicorn app.main:app"  # Python entrypoint
 RELOAD_DIRS="app modules"       # Space-separated --reload-dir targets (empty = watch all)
-FRONTEND_DIR="ui"               # "" if no separate frontend
+FRONTEND_DIR="frontend"         # matches the shipped skeleton; "" if no separate frontend
 DEFAULT_PORT=8000
 UI_PORT=5173
 HEALTH_PATH="/health"

@@ -34,12 +34,12 @@ $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 # ============================================================================
 # CONFIGURATION — Edit this section per project
 # ============================================================================
-$ProjectName     = "{{PROJECT_NAME}}"          # e.g. "Synaptix AGENTS", "Papyrus"
+$ProjectName     = "{{PROJECT_NAME}}"          # e.g. "My Project"
 $BackendType     = "python"                     # "python" | "node"
 $BackendDir      = "backend"                    # Relative to repo root ("." for monolith)
 $BackendCmd      = "uvicorn app.main:app"       # Python: uvicorn entrypoint. Node: ignored (uses npm)
 $ReloadDirs      = @("app", "modules")          # Python: --reload-dir targets (empty = watch all)
-$FrontendDir     = "ui"                         # Relative to repo root, or "" if none/monolith
+$FrontendDir     = "frontend"                   # matches the shipped skeleton; "" if none/monolith
 $DefaultPort     = 8000                         # Backend port
 $UIPort          = 5173                         # Frontend port
 $HealthPath      = "/health"                    # Health check endpoint path
