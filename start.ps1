@@ -4,10 +4,17 @@
     Generic scaffold — edit the CONFIGURATION section for your project.
 
 .DESCRIPTION
-    Handles: stale process cleanup, cache cleaning, build stamping,
+    No flags = full dev stack (backend --reload + frontend) — same as ./start.sh on Linux/WSL.
+    Handles: env setup/update, stale process cleanup, cache cleaning, build stamping,
     backend + frontend launch, health check, PYTHONDONTWRITEBYTECODE.
-    Based on AGENTS project start.ps1 patterns.
 
+    Blocked by execution policy (unsigned script / UNC path like \\wsl.localhost\...)?
+    Run .\start.cmd with the same flags — it scopes -ExecutionPolicy Bypass to that run.
+
+.PARAMETER Setup
+    Install/update deps, create .env from the example, run the drift guard + tests.
+.PARAMETER Help
+    Show commands, local URLs, and project links.
 .PARAMETER Stop
     Stop all running project processes.
 .PARAMETER Production
@@ -26,6 +33,7 @@ param(
     [switch]$BackendOnly,
     [switch]$Test,
     [switch]$Status,
+    [switch]$Help,
     [int]$Port = 0
 )
 
@@ -152,6 +160,26 @@ function Clear-Port([int]$PortNum) {
         Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue
         Start-Sleep -Milliseconds 500
     }
+}
+
+# ── Help command ──────────────────────────────────────
+if ($Help) {
+    Write-Host ""
+    Write-Host "  $ProjectName  - $ProjectTagline" -ForegroundColor White
+    Write-Host ""
+    Write-Host "   Commands" -ForegroundColor White
+    Write-Host "     .\start.ps1             full dev stack: backend (--reload) + frontend  (default)"
+    Write-Host "     .\start.ps1 -Setup      install/update deps, create .env, verify - sprint-1 ready"
+    Write-Host "     .\start.ps1 -BackendOnly   backend only   -   .\start.ps1 -Production"
+    Write-Host "     .\start.ps1 -Test       run the test suite"
+    Write-Host "     .\start.ps1 -Status     ports + health   -   .\start.ps1 -Stop"
+    Write-Host ""
+    Write-InfoLinks "next"
+    Write-Host ""
+    Write-Host "   Blocked by execution policy (unsigned / UNC path like \\wsl.localhost\...)?" -ForegroundColor DarkGray
+    Write-Host "   Use .\start.cmd with the same flags - it scopes -ExecutionPolicy Bypass to this run." -ForegroundColor DarkGray
+    Write-Host ""
+    return
 }
 
 # ── Stop command ──────────────────────────────────────

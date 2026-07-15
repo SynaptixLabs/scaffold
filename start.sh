@@ -4,12 +4,14 @@
 # Based on AGENTS project start.sh patterns.
 #
 # Usage:
+#   ./start.sh              # Default: full dev stack (backend --reload + frontend) — same as `dev --ui`
 #   ./start.sh setup        # One-time/refresh: install deps, create .env, verify — sprint-1 ready
-#   ./start.sh              # Production (default for Docker/CI)
-#   ./start.sh dev          # Local dev: backend (--reload); auto-updates deps when they changed
+#   ./start.sh dev          # Local dev: backend only (--reload); auto-updates deps when they changed
 #   ./start.sh dev --ui     # Local dev: backend + frontend
+#   ./start.sh production   # Production server (Docker/CI — no reload, no frontend)
 #   ./start.sh test         # Run tests
-#   ./start.sh stop         # Kill project processes
+#   ./start.sh status|stop  # Health check / kill project processes
+#   ./start.sh help         # This help + URLs and links
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -46,7 +48,7 @@ fi
 # Rich info block — printed after setup and under the dev banner. $1 = "running"|"next".
 info_links() {
   local mode="${1:-next}"
-  echo "   ${C_B}Local URLs${C_OFF}$([ "$mode" = "next" ] && echo " ${C_DIM}(after ./start.sh dev --ui)${C_OFF}")"
+  echo "   ${C_B}Local URLs${C_OFF}$([ "$mode" = "next" ] && echo " ${C_DIM}(after ./start.sh)${C_OFF}")"
   echo "     Frontend         ${C_CY}http://localhost:$UI_PORT${C_OFF}"
   echo "     API              ${C_CY}http://localhost:$PORT${C_OFF}"
   echo "     API docs         ${C_CY}http://localhost:$PORT/docs${C_OFF}"
@@ -117,6 +119,24 @@ ensure_frontend_env() {
 }
 
 # ── Commands ──────────────────────────────────────────
+cmd_help() {
+  echo ""
+  echo "  ${C_B}$PROJECT_NAME${C_OFF}  ${C_DIM}· $PROJECT_TAGLINE${C_OFF}"
+  echo ""
+  echo "   ${C_B}Commands${C_OFF}"
+  echo "     ./start.sh              full dev stack: backend (--reload) + frontend  ${C_DIM}(default)${C_OFF}"
+  echo "     ./start.sh setup        install/update deps, create .env, verify — sprint-1 ready"
+  echo "     ./start.sh dev [--ui]   backend only, or backend + frontend"
+  echo "     ./start.sh production   production server (Docker/CI — no reload)"
+  echo "     ./start.sh test         run the test suite"
+  echo "     ./start.sh status       ports + health   ·   ./start.sh stop"
+  echo ""
+  info_links next
+  echo ""
+  echo "   ${C_DIM}Windows: .\\start.cmd (same commands as flags: -Setup, -Test, -Status, -Stop, -Help)${C_OFF}"
+  echo ""
+}
+
 cmd_setup() {
   log "Setting up / updating the environment..."
   ensure_backend_env
@@ -139,9 +159,9 @@ cmd_setup() {
   echo "   ${C_GR}✔ Environment ready — you're set for sprint 1.${C_OFF}"
   echo ""
   echo "   ${C_B}Run it${C_OFF}"
-  echo "     ./start.sh dev --ui    dev: backend + frontend"
+  echo "     ./start.sh             dev: backend + frontend (default)"
   echo "     ./start.sh test        run the test suite"
-  echo "     ./start.sh status      health check   ·   ./start.sh stop"
+  echo "     ./start.sh status      health check   ·   ./start.sh stop   ·   ./start.sh help"
   echo ""
   info_links next
   echo "  ${C_CY}════════════════════════════════════════════════════${C_OFF}"
@@ -256,11 +276,14 @@ cmd_dev() {
 }
 
 # ── Main dispatch ─────────────────────────────────────
-case "${1:-production}" in
-  setup)      cmd_setup ;;
-  stop)       cmd_stop ;;
-  status)     cmd_status ;;
-  test)       shift; cmd_test "$@" ;;
-  dev)        shift; cmd_dev "$@" ;;
-  production|*) cmd_production ;;
+case "${1:-}" in
+  "")             cmd_dev --ui ;;     # bare `./start.sh` = full dev stack (parity with .\start.ps1)
+  setup)          cmd_setup ;;
+  stop)           cmd_stop ;;
+  status)         cmd_status ;;
+  test)           shift; cmd_test "$@" ;;
+  dev)            shift; cmd_dev "$@" ;;
+  production)     cmd_production ;;
+  help|-h|--help) cmd_help; exit 0 ;;
+  *)              log "Unknown command: '$1'"; cmd_help; exit 2 ;;
 esac

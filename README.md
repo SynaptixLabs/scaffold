@@ -80,7 +80,7 @@ scaffold/
 │                               frontend = minimal Vite page wired to backend /health
 ├── tests/                      test root — screenshots/ is the E2E evidence target (your tests land here)
 ├── .github/workflows/ci.yml    runs the drift guard on every push/PR
-├── start.sh · start.ps1        setup (env update, sprint-1 ready) · dev · test · status · stop
+├── start.sh · start.ps1 · start.cmd   setup (env update, sprint-1 ready) · dev (default) · test · status · stop · help
 ├── .env.example · pyproject.toml   project bootstrap (customize per project)
 └── LICENSE (MIT) · CONTRIBUTING.md · CHANGELOG.md
 ```
@@ -167,14 +167,16 @@ git clone https://github.com/SynaptixLabs/scaffold.git my-project
 cd my-project && rm -rf .git && git init
 
 # 2. Set up / update the environment — deps, .env, drift guard, tests. Sprint-1 ready.
-./start.sh setup            # Windows: .\start.ps1 -Setup
+./start.sh setup            # Windows: .\start.cmd -Setup
 
 # 3. Run it — the template starts out of the box
-./start.sh dev --ui         # backend :8000 (/health, /docs) + landing page :5173
+./start.sh                  # backend :8000 (/health, /docs) + frontend :5173
+                            # Windows: .\start.cmd   ·   help: ./start.sh help
 
-# Both commands end with a rich console summary: local URLs (landing page, API docs,
+# Both commands end with a rich console summary: local URLs (frontend, API docs,
 # health), the key reads (AGENTS.md, sprint-1 entry, drift guard), and project links.
-# Works on Linux/macOS/WSL (start.sh) and Windows PowerShell 5.1+ (start.ps1).
+# Works on Linux/macOS/WSL (start.sh) and Windows PowerShell 5.1+ (start.ps1 —
+# .\start.cmd wraps it with a per-run execution-policy bypass for UNC/MOTW clones).
 
 # 4. Open it in your CLI — the agents are already there. Try:
 #    act as JANUS: scope a v1 for <your idea>
