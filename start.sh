@@ -53,6 +53,12 @@ info_links() {
   echo "     API              ${C_CY}http://localhost:$PORT${C_OFF}"
   echo "     API docs         ${C_CY}http://localhost:$PORT/docs${C_OFF}"
   echo "     Health           ${C_CY}http://localhost:$PORT$HEALTH_PATH${C_OFF}"
+  # WSL: the Windows→WSL localhost relay can silently break (even with localhostForwarding=true).
+  # Offer the direct-IP fallback so a Windows browser always has a working URL.
+  if grep -qi microsoft /proc/version 2>/dev/null; then
+    local wsl_ip; wsl_ip=$(hostname -I 2>/dev/null | awk '{print $1}')
+    [ -n "$wsl_ip" ] && echo "     ${C_DIM}From Windows, if localhost fails: http://$wsl_ip:$UI_PORT · http://$wsl_ip:$PORT (relay fix: wsl --shutdown)${C_OFF}"
+  fi
   echo ""
   echo "   ${C_B}Read me first${C_OFF}"
   echo "     Constitution     AGENTS.md   ·   Router  .claude/00_INDEX.md"
